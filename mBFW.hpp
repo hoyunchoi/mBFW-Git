@@ -18,7 +18,7 @@ namespace mBFW{
     static std::set<double> time_orderParameterDistribution;
     static std::set<double> orderParameter_clusterSizeDistribution;
     static const std::vector<std::string> states = {"before", "during"};
-    const std::string rootDirectory = "../data/mBFW/";
+    const std::string rootPath = "../data/mBFW_hybrid/";
 
     //! Choose observables to be processed
     static bool process_orderParameter;

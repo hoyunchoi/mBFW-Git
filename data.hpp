@@ -170,7 +170,7 @@ namespace mBFW::data{
 
     //! time vs X
     void time_X(const std::string& t_observable){
-        const std::string directory = rootDirectory + t_observable + "/";
+        const std::string directory = rootPath + t_observable + "/";
         std::vector<double> average(networkSize);
         std::vector<double> temp(networkSize);
         for (int core=0; core<fileNum; ++core){
@@ -206,7 +206,7 @@ namespace mBFW::data{
 
     //! time vs X with log binning w.r.t t_c-t
     void logBin_time_X(const std::string& t_observable){
-        const std::string directory = rootDirectory + t_observable + "/";
+        const std::string directory = rootPath + t_observable + "/";
 
         std::map<double, double> merge;
         std::map<double, int> sampledMerge;
@@ -240,7 +240,7 @@ namespace mBFW::data{
     //* t_c : only for type check
     template <typename T>
     void checkPointDistribution(const std::string& t_observable, const T& t_check){
-        const std::string directory = rootDirectory + t_observable + "/";
+        const std::string directory = rootPath + t_observable + "/";
         std::set<double> checkPointList;
         if (t_observable == "orderParameterDistribution"){
             checkPointList = time_orderParameterDistribution;
@@ -281,7 +281,7 @@ namespace mBFW::data{
     template <typename T>
     void distribution(const std::string& t_observable, const T& t_check){
         for (auto state : states){
-            const std::string directory = rootDirectory + t_observable + "/" + state + "/";
+            const std::string directory = rootPath + t_observable + "/" + state + "/";
 
             //* average
             const std::map<T, double> avg = averageDistribution(t_observable, directory, t_check, 0.0);
@@ -303,7 +303,7 @@ namespace mBFW::data{
     //* t_c : only for type check
     template <typename T>
     void X_deltaAcceptance(const std::string&  t_observable, const T& t_check){
-        const std::string directory = rootDirectory + t_observable + "/";
+        const std::string directory = rootPath + t_observable + "/";
 
         //* average
         const std::map<T, double> avg = average(directory, t_check);
