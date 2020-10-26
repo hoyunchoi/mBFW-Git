@@ -30,6 +30,7 @@ namespace mBFW::generate{
     //! Random Engine
     pcg32 randomEngine;
     std::uniform_int_distribution<int> nodeDistribution;
+    int a;
 
     //! calculation functions
     std::function<void(const int&, const double&)> do_orderParameter;
