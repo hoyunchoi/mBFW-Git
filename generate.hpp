@@ -40,6 +40,14 @@ namespace mBFW::generate{
     std::vector<double> meanClusterSize;
     std::vector<double> meanClusterSize_trial;
 
+    //! clusterSizeDist[op]: Average distribution of cluster size when order parameter passes op
+    //! clusterSizeDist_exact[op]: Average distribution of cluster size when order parameter is exactly op
+    //! clusterSizeDist_time[time]: Average distribution of cluster size when time at specific time
+    std::map<double, std::vector<double>> clusterSizeDist;
+    std::map<double, std::vector<double>> clusterSizeDist_exact;
+    std::map<double, std::vector<double>> clustersizeDist_time;
+
+
     //*-------------------------------------------Set Parameters for one run------------------------------------------------------
     void setParameters(const int& t_networkSize, const int& t_ensembleSize, const double& t_acceptanceThreshold, const int& t_coreNum, const int& t_randomEngineSeed){
         //* Input variables
@@ -55,7 +63,7 @@ namespace mBFW::generate{
 
         //* Resize observables
         const int maxTime = t_networkSize;
-        const int maxTrialTime = std::ceil(t_networkSize/t_acceptanceThreshold);
+        const int maxTrialTime = std::floor(maxTime/t_acceptanceThreshold);
         orderParameter.assign(maxTime, 0.0);
         orderParameter_trial.assign(maxTrialTime, 0.0);
         secondMoment.assign(maxTime, 0.0);
@@ -157,7 +165,7 @@ namespace mBFW::generate{
         if (!fs::exists(p)){
             fs::create_directories(p);
         }
-        writeCSV(orderParameterPath+defaultFileName(networkSize, acceptanceThreshold, ensembleSize, coreNum, randomEngineSeed), orderParameter);
+        CSV::write(orderParameterPath + defaultFileName(networkSize, acceptanceThreshold, ensembleSize, coreNum, randomEngineSeed), orderParameter);
 
         //! Average and Save Trial Order Parameter
         orderParameter_trial /= ensembleSize;
@@ -166,27 +174,27 @@ namespace mBFW::generate{
         if (!fs::exists(p)){
             fs::create_directories(p);
         }
-        writeCSV(orderParameter_trialPath+defaultFileName(networkSize, acceptanceThreshold, ensembleSize, coreNum, randomEngineSeed), orderParameter);
+        CSV::write(orderParameter_trialPath + defaultFileName(networkSize, acceptanceThreshold, ensembleSize, coreNum, randomEngineSeed), orderParameter_trial);
 
-        //! Average and Save Variance
+        //! Average and Save Order Parameter Variance
         secondMoment /= ensembleSize;
-        const std::vector<double> variance = secondMoment - elementPow(orderParameter, 2.0);
-        const std::string variancePath = rootPath + "variance/";
+        const std::vector<double> orderParameterVariance = secondMoment - elementPow(orderParameter, 2.0);
+        const std::string variancePath = rootPath + "orderParameterVariance/";
         p = variancePath;
         if (!fs::exists(p)){
             fs::create_directories(p);
         }
-        writeCSV(variancePath+defaultFileName(networkSize, acceptanceThreshold, ensembleSize, coreNum, randomEngineSeed), variance);
+        CSV::write(variancePath + defaultFileName(networkSize, acceptanceThreshold, ensembleSize, coreNum, randomEngineSeed), orderParameterVariance);
 
-        //! Average and Save Trial Variance
+        //! Average and Save Order Parameter Trial Variance
         secondMoment_trial /= ensembleSize;
-        const std::vector<double> variance_trial = secondMoment_trial - elementPow(orderParameter_trial, 2.0);
-        const std::string variance_trialPath = rootPath + "variance_trial/";
+        const std::vector<double> orderParameterVariance_trial = secondMoment_trial - elementPow(orderParameter_trial, 2.0);
+        const std::string variance_trialPath = rootPath + "orderParameterVariance_trial/";
         p = variance_trialPath;
         if (!fs::exists(p)){
             fs::create_directories(p);
         }
-        writeCSV(variance_trialPath+defaultFileName(networkSize, acceptanceThreshold, ensembleSize, coreNum, randomEngineSeed), variance_trial);
+        CSV::write(variance_trialPath + defaultFileName(networkSize, acceptanceThreshold, ensembleSize, coreNum, randomEngineSeed), orderParameterVariance_trial);
 
         //! Average and Save Mean Cluster Size
         meanClusterSize /= ensembleSize;
@@ -195,7 +203,7 @@ namespace mBFW::generate{
         if (!fs::exists(p)){
             fs::create_directories(p);
         }
-        writeCSV(meanClusterSizePath+defaultFileName(networkSize, acceptanceThreshold, ensembleSize, coreNum, randomEngineSeed), meanClusterSize);
+        CSV::write(meanClusterSizePath + defaultFileName(networkSize, acceptanceThreshold, ensembleSize, coreNum, randomEngineSeed), meanClusterSize);
 
         //! Average and Save Trial Mean Cluster Size
         meanClusterSize_trial /= ensembleSize;
@@ -204,6 +212,6 @@ namespace mBFW::generate{
         if (!fs::exists(p)){
             fs::create_directories(p);
         }
-        writeCSV(meanClusterSize_trialPath+defaultFileName(networkSize, acceptanceThreshold, ensembleSize, coreNum, randomEngineSeed), meanClusterSize_trial);
+        CSV::write(meanClusterSize_trialPath + defaultFileName(networkSize, acceptanceThreshold, ensembleSize, coreNum, randomEngineSeed), meanClusterSize_trial);
     }//* End of function mBFW::generate::save
 }//* End of namespace mBFW::generate

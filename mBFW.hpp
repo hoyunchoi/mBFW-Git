@@ -38,6 +38,10 @@ namespace mBFW{
     static bool process_dynamics;
 
     //! File name conventions
+    const std::string defaultFile(const int& t_networkSize, const double& t_acceptanceThreshold){
+        return "N" + to_stringWithExponent((double)t_networkSize, 1) + ",G" + to_stringWithPrecision(t_acceptanceThreshold, 1);
+    }
+
     const std::string defaultFileName(const int& t_networkSize, const double& t_acceptanceThreshold, const int&t_ensembleSize, const int& t_coreNum=-1, const int& t_randomEngineSeed=-1){
         const std::string fileName = "N" + to_stringWithExponent((double)t_networkSize, 1) + ",G"+to_stringWithPrecision(t_acceptanceThreshold,1) + ",E"+std::to_string(t_ensembleSize);
 
