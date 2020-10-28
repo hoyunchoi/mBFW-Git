@@ -43,9 +43,11 @@ namespace mBFW::generate{
     //! clusterSizeDist[op]: Average distribution of cluster size when order parameter passes op
     //! clusterSizeDist_exact[op]: Average distribution of cluster size when order parameter is exactly op
     //! clusterSizeDist_time[time]: Average distribution of cluster size when time at specific time
-    std::map<double, std::vector<double>> clusterSizeDist;
-    std::map<double, std::vector<double>> clusterSizeDist_exact;
-    std::map<double, std::vector<double>> clustersizeDist_time;
+    std::map<double, std::vector<long long>> clusterSizeDist;
+    std::map<double, std::vector<long long>> clusterSizeDist_exact;
+    std::map<double, std::vector<long long>> clustersizeDist_time;
+    std::vector<double> orderParameter_clusterSizeDist;
+    std::vector<double> time_clusterSizeDist;
 
 
     //*-------------------------------------------Set Parameters for one run------------------------------------------------------
@@ -56,6 +58,8 @@ namespace mBFW::generate{
         coreNum = t_coreNum;
         acceptanceThreshold = t_acceptanceThreshold;
         randomEngineSeed = t_randomEngineSeed;
+        orderParameter_clusterSizeDist = std::vector<double>{0.05, 0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9};
+        time_clusterSizeDist = std::vector<double> {0.8, 0.81, 0.82, 0.83, 0.84, 0.85, 0.86, 0.87, 0.88, 0.89};
 
         //* Initialize Random Engine
         randomEngineSeed == -1 ? randomEngine.seed((std::random_device())()) : randomEngine.seed(randomEngineSeed);
@@ -70,6 +74,13 @@ namespace mBFW::generate{
         secondMoment_trial.assign(maxTrialTime, 0.0);
         meanClusterSize.assign(maxTime, 0.0);
         meanClusterSize_trial.assign(maxTrialTime, 0.0);
+        for (const double& op : orderParameter_clusterSizeDist){
+            clusterSizeDist[op].assign(t_networkSize, 0);
+            clusterSizeDist_exact[op].assign(t_networkSize, 0);
+        }
+        for (const double& t : time_clusterSizeDist){
+            clustersizeDist_time[t].assign(t_networkSize, 0);
+        }
     } //* End of function mBFW::generate::setParameters
 
     //*-------------------------------------------Run mBFW model ------------------------------------------------------
@@ -83,7 +94,11 @@ namespace mBFW::generate{
             int trialTime = 0;
             int upperBound = 2;
             int eventTime = 0;
-            bool findNewNodes = true;
+            bool choosingNewNode = true;
+            std::map<double, bool> findingClusterSizeDist;
+            for (const double& op : orderParameter_clusterSizeDist){
+                findingClusterSizeDist[op] = true;
+            }
 
             //* initial condition
             orderParameter[0] += 1.0/networkSize;
@@ -96,7 +111,7 @@ namespace mBFW::generate{
             //* Do rBFW algorithm until all clusters merge to one
             while (model.getMaximumClusterSize() < networkSize){
                 //* Find new nodes
-                if (findNewNodes){
+                if (choosingNewNode){
                     //* Randomly choose new nodes
                     do {
                         node1 = nodeDistribution(randomEngine);
@@ -115,8 +130,9 @@ namespace mBFW::generate{
                     model.merge(root1, root2);
                     ++time;
                     ++trialTime;
-                    findNewNodes = true;
-                    const double currentOrderParameter = (double)model.getMaximumClusterSize()/networkSize;
+                    choosingNewNode = true;
+                    const int currentMaximumClusterSize = model.getMaximumClusterSize();
+                    const double currentOrderParameter = (double)currentMaximumClusterSize/networkSize;
 
                     //! Order Parameter
                     orderParameter[time] += currentOrderParameter;
@@ -129,14 +145,42 @@ namespace mBFW::generate{
                     //! Mean Cluster Size
                     meanClusterSize[time] += model.getMeanClusterSize();
                     meanClusterSize_trial[trialTime] += model.getMeanClusterSize();
+
+                    //! Cluster Size Distribution time
+                    auto it = std::find(time_clusterSizeDist.begin(), time_clusterSizeDist.end(), (double)time/networkSize);
+                    if (it != time_clusterSizeDist.end()){
+                        const std::map<int, int> sortedCluster = model.getSortedCluster();
+                        for (auto it2 = sortedCluster.begin(); it2 != sortedCluster.end(); ++it2){
+                            clustersizeDist_time[*it][it2->first] += it2->second;
+                        }
+                    }
+
+                    //* Order Parameter of network is changed
+                    if (model.getDeltaMaximumClusterSize()){
+                        //! Cluster Size Distribution
+                        for (const double op : orderParameter_clusterSizeDist){
+                            if (findingClusterSizeDist[op] && currentOrderParameter){
+                                const std::map<int, int> sortedCluster = model.getSortedCluster();
+                                for (auto it2 = sortedCluster.begin(); it2 != sortedCluster.end(); ++it2){
+                                    clusterSizeDist[*it][it2->first] += it2->second;
+                                }
+                                findingClusterSizeDist[op] = false;
+                            }
+                        }
+
+                        //! Cluster Size Distribution Exact
+                    }
+
+
+
                 }
                 else if ((double)time/trialTime <= acceptanceThreshold){
                     upperBound = size1+size2;
-                    findNewNodes=false;
+                    choosingNewNode=false;
                 }
                 else{
                     ++trialTime;
-                    findNewNodes=true;
+                    choosingNewNode=true;
                     const double currentOrderParameter = (double)model.getMaximumClusterSize()/networkSize;
 
                     //! Trial Order Parameter
