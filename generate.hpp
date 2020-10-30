@@ -46,7 +46,9 @@ namespace mBFW::generate{
     std::map<double, std::vector<long long>> clusterSizeDist;
     std::map<double, std::vector<long long>> clusterSizeDist_exact;
     std::map<double, std::vector<long long>> clusterSizeDist_time;
-
+    std::set<double> time_orderParameterDistr;
+    std::set<double> orderParameter_clusterSizeDist;
+    std::set<double> time_clusterSizeDist;
 
     //*-------------------------------------------Set Parameters for one run------------------------------------------------------
     void setParameters(const int& t_networkSize, const int& t_ensembleSize, const double& t_acceptanceThreshold, const int& t_coreNum, const int& t_randomEngineSeed){
@@ -56,8 +58,8 @@ namespace mBFW::generate{
         coreNum = t_coreNum;
         acceptanceThreshold = t_acceptanceThreshold;
         randomEngineSeed = t_randomEngineSeed;
-        orderParameter_clusterSizeDist = mBFW::parameters::set_orderParameter_clusterSizeDist(t_networkSize, t_ensembleSize);
-        time_clusterSizeDist = mBFW::parameters::set_time_clusterSizeDist(t_networkSize, t_ensembleSize);
+        orderParameter_clusterSizeDist = mBFW::parameters::set_orderParameter_clusterSizeDist(t_networkSize, t_acceptanceThreshold);
+        time_clusterSizeDist = mBFW::parameters::set_time_clusterSizeDist(t_networkSize, t_acceptanceThreshold);
         precision = 1e4;
         if (t_networkSize < precision){
             precision = t_networkSize;

@@ -15,9 +15,6 @@ namespace mBFW{
     static const double m_a = 0.05;
     static double m_c;
     static double t_c;
-    static std::set<double> time_orderParameterDistr;
-    static std::set<double> orderParameter_clusterSizeDist;
-    static std::set<double> time_clusterSizeDist;
     static const std::vector<std::string> states = {"before", "during"};
     const std::string rootPath = "../data/mBFW_hybrid/";
 

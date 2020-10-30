@@ -6,7 +6,7 @@
 namespace mBFW::parameters{
     // double m_c;
     // double t_c;
-    const std::set<double> set_orderParameter_clusterSizeDist(const int& t_networkSize, const double& t_acceptanceThreshold){
+    std::set<double> set_orderParameter_clusterSizeDist(const int& t_networkSize, const double& t_acceptanceThreshold){
         std::set<double> orderParameter_clusterSizeDist;
         if (t_acceptanceThreshold == 0.2){
             orderParameter_clusterSizeDist = {0.01, 0.05, 0.1, 0.15, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95, 0.96, 0.97, 0.98, 0.99, 0.992, 0.994, 0.996, 0.998};
@@ -35,10 +35,13 @@ namespace mBFW::parameters{
         else if (t_acceptanceThreshold == 1.0){
             orderParameter_clusterSizeDist = {0.01, 0.05, 0.1, 0.15, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9};
         }
+        else{
+            std::cout << "Not defined acceptance rate\n";
+        }
         return orderParameter_clusterSizeDist;
     }
 
-    const std::set<double> set_time_clusterSizeDist(const int& t_networkSize, const double& t_acceptanceThreshold){
+    std::set<double> set_time_clusterSizeDist(const int& t_networkSize, const double& t_acceptanceThreshold){
         std::set<double> time_clusterSizeDist;
         if (t_acceptanceThreshold == 0.2){
             time_clusterSizeDist = {0.98, 0.985, 0.99, 0.991, 0.992, 0.993, 0.994, 0.995, 0.996, 0.997, 0.998, 0.999};
@@ -66,6 +69,9 @@ namespace mBFW::parameters{
         }
         else if (t_acceptanceThreshold == 1.0){
             time_clusterSizeDist = {0.45, 0.46, 0.47, 0.48, 0.49, 0.5, 0.51, 0.52, 0.53, 0.54, 0.55};
+        }
+        else{
+            std::cout << "Not defined acceptance rate\n";
         }
         return time_clusterSizeDist;
     }
