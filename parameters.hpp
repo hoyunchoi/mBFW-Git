@@ -4,46 +4,112 @@
 #include <set>
 
 namespace mBFW::parameters{
-    double m_c;
-    double t_c;
-    std::set<double> time_orderParameterDistribution;
-    std::set<double> orderParameter_clusterSizeDistribution;
-
-    std::tuple<double, double, std::set<double>, std::set<double>> pre_defined(const int&t_networkSize, const double& t_acceptanceThreshold){
+    // double m_c;
+    // double t_c;
+    const std::set<double> set_orderParameter_clusterSizeDist(const int& t_networkSize, const double& t_acceptanceThreshold){
+        std::set<double> orderParameter_clusterSizeDist;
         if (t_acceptanceThreshold == 0.2){
-            m_c = 0.989; t_c = 0.995;
-            time_orderParameterDistribution = {0.993,0.9935,0.994,0.9945,0.995,0.9955,0.996,0.9965,0.997,0.9975,0.998,0.9985,0.999,0.9995};
-            orderParameter_clusterSizeDistribution = {0.01,0.02,0.03,0.04,0.05,0.06,0.07,0.08,0.09,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.95,0.99};
+            orderParameter_clusterSizeDist = {0.01, 0.05, 0.1, 0.15, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95, 0.96, 0.97, 0.98, 0.99, 0.992, 0.994, 0.996, 0.998};
         }
         else if (t_acceptanceThreshold == 0.3){
-            m_c = 0.960; t_c = 0.983;
+            orderParameter_clusterSizeDist = {0.01, 0.05, 0.1, 0.15, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95, 0.955, 0.96, 0.965, 0.97};
         }
         else if (t_acceptanceThreshold == 0.4){
-            m_c = 0.910; t_c = 0.964;
+            orderParameter_clusterSizeDist = {0.01, 0.05, 0.1, 0.15, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.905, 0.91, 0.915, 0.92, 0.95};
         }
         else if (t_acceptanceThreshold == 0.5){
-            m_c = 0.860; t_c = 0.937;
-            time_orderParameterDistribution = {0.9320, 0.9370, 0.9482};
-            orderParameter_clusterSizeDistribution = {0.01, 0.05, 0.1, 0.15, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.8254, 0.86, 0.9};
-            // orderParameter_clusterSizeDistribution = {0.2};
+            orderParameter_clusterSizeDist = {0.01, 0.05, 0.1, 0.15, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.81, 0.82, 0.83, 0.84, 0.85, 0.86, 0.87, 0.88, 0.89, 0.9};
         }
         else if (t_acceptanceThreshold == 0.6){
-            m_c = 0.784; t_c = 0.901;
+            orderParameter_clusterSizeDist = {0.01, 0.05, 0.1, 0.15, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.72, 0.74, 0.76, 0.78, 0.8, 0.82, 0.84, 0.9};
         }
         else if (t_acceptanceThreshold == 0.7){
-            m_c = 0.693; t_c = 0.856;
+            orderParameter_clusterSizeDist = {0.01, 0.05, 0.1, 0.15, 0.2, 0.3, 0.4, 0.5, 0.6, 0.65, 0.67, 0.69, 0.7, 0.71, 0.73, 0.8, 0.9};
         }
         else if (t_acceptanceThreshold == 0.8){
-            m_c = 0.580; t_c = 0.799;
+            orderParameter_clusterSizeDist = {0.01, 0.05, 0.1, 0.15, 0.2, 0.3, 0.4, 0.5, 0.52, 0.54, 0.56, 0.58, 0.6, 0.62, 0.7, 0.8, 0.9};
         }
         else if (t_acceptanceThreshold == 0.9){
-            m_c = 0.415; t_c = 0.718;
+            orderParameter_clusterSizeDist = {0.01, 0.05, 0.1, 0.15, 0.2, 0.3, 0.36, 0.38, 0.4, 0.42, 0.44, 0.46, 0.5, 0.6, 0.7, 0.8, 0.9};
         }
         else if (t_acceptanceThreshold == 1.0){
-            m_c = 0.000; t_c = 0.500;
+            orderParameter_clusterSizeDist = {0.01, 0.05, 0.1, 0.15, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9};
         }
-        return std::make_tuple(m_c, t_c, time_orderParameterDistribution, orderParameter_clusterSizeDistribution);
-    }//* End of function mBFW::parameters::pre_defined
+        return orderParameter_clusterSizeDist;
+    }
+
+    const std::set<double> set_time_clusterSizeDist(const int& t_networkSize, const double& t_acceptanceThreshold){
+        std::set<double> time_clusterSizeDist;
+        if (t_acceptanceThreshold == 0.2){
+            time_clusterSizeDist = {0.98, 0.985, 0.99, 0.991, 0.992, 0.993, 0.994, 0.995, 0.996, 0.997, 0.998, 0.999};
+        }
+        else if (t_acceptanceThreshold == 0.3){
+            time_clusterSizeDist = {0.95, 0.96, 0.97, 0.98, 0.981, 0.982, 0.983, 0.984, 0.985, 0.986, 0.987, 0.989, 0.99, 0.995};
+        }
+        else if (t_acceptanceThreshold == 0.4){
+            time_clusterSizeDist = {0.92, 0.94, 0.96, 0.961, 0.962, 0.963, 0.964, 0.965, 0.966, 0.967, 0.968, 0.969, 0.97, 0.98, 0.99};
+        }
+        else if (t_acceptanceThreshold == 0.5){
+            time_clusterSizeDist = {0.9, 0.91, 0.92, 0.93, 0.931, 0.932, 0.933, 0.934, 0.935, 0.936, 0.937, 0.938, 0.939, 0.94, 0.95, 0.96};
+        }
+        else if (t_acceptanceThreshold == 0.6){
+            time_clusterSizeDist = {0.84, 0.86, 0.88, 0.89, 0.896, 0.898, 0.90, 0.902, 0.904, 0.905, 0.906, 0.908, 0.91, 0.92, 0.94};
+        }
+        else if (t_acceptanceThreshold == 0.7){
+            time_clusterSizeDist = {0.8, 0.82, 0.83, 0.84, 0.846, 0.848, 0.85, 0.852, 0.854, 0.856, 0.858, 0.86, 0.87,};
+        }
+        else if (t_acceptanceThreshold == 0.8){
+            time_clusterSizeDist = {0.74, 0.76, 0.78, 0.79, 0.792, 0.794, 0.796, 0.798, 0.80, 0.802, 0.804, 0.806, 0.808, 0.81, 0.83};
+        }
+        else if (t_acceptanceThreshold == 0.9){
+            time_clusterSizeDist = {0.66, 0.68, 0.69, 0.7, 0.71, 0.712, 0.714, 0.716, 0.718, 0.72, 0.722, 0.724, 0.726, 0.728, 0.73, 0.74};
+        }
+        else if (t_acceptanceThreshold == 1.0){
+            time_clusterSizeDist = {0.45, 0.46, 0.47, 0.48, 0.49, 0.5, 0.51, 0.52, 0.53, 0.54, 0.55};
+        }
+        return time_clusterSizeDist;
+    }
+
+
+
+
+
+
+    // std::tuple<double, double, std::set<double>, std::set<double>> pre_defined(const int&t_networkSize, const double& t_acceptanceThreshold){
+    //     if (t_acceptanceThreshold == 0.2){
+    //         m_c = 0.989; t_c = 0.995;
+    //         time_orderParameterDistribution = {0.993,0.9935,0.994,0.9945,0.995,0.9955,0.996,0.9965,0.997,0.9975,0.998,0.9985,0.999,0.9995};
+    //         orderParameter_clusterSizeDistribution = {0.01,0.02,0.03,0.04,0.05,0.06,0.07,0.08,0.09,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.95,0.99};
+    //     }
+    //     else if (t_acceptanceThreshold == 0.3){
+    //         m_c = 0.960; t_c = 0.983;
+    //     }
+    //     else if (t_acceptanceThreshold == 0.4){
+    //         m_c = 0.910; t_c = 0.964;
+    //     }
+    //     else if (t_acceptanceThreshold == 0.5){
+    //         m_c = 0.860; t_c = 0.937;
+    //         time_orderParameterDistribution = {0.9320, 0.9370, 0.9482};
+    //         orderParameter_clusterSizeDistribution = {0.01, 0.05, 0.1, 0.15, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.8254, 0.86, 0.9};
+    //         // orderParameter_clusterSizeDistribution = {0.2};
+    //     }
+    //     else if (t_acceptanceThreshold == 0.6){
+    //         m_c = 0.784; t_c = 0.901;
+    //     }
+    //     else if (t_acceptanceThreshold == 0.7){
+    //         m_c = 0.693; t_c = 0.856;
+    //     }
+    //     else if (t_acceptanceThreshold == 0.8){
+    //         m_c = 0.580; t_c = 0.799;
+    //     }
+    //     else if (t_acceptanceThreshold == 0.9){
+    //         m_c = 0.415; t_c = 0.718;
+    //     }
+    //     else if (t_acceptanceThreshold == 1.0){
+    //         m_c = 0.000; t_c = 0.500;
+    //     }
+    //     return std::make_tuple(m_c, t_c, time_orderParameterDistribution, orderParameter_clusterSizeDistribution);
+    // }//* End of function mBFW::parameters::pre_defined
 
 
 
