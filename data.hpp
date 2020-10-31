@@ -12,13 +12,18 @@
 #include "../library-Git/linearAlgebra.hpp"
 
 #include "parameters.hpp"
-#include "mBFW.hpp"
+#include "fileName.hpp"
 
 namespace mBFW::data{
     using namespace linearAlgebra;
     namespace fs = std::filesystem;
+    const std::string rootPath = "../data/mBFW_hybrid/";
 
     //*------------------------------------------- Declaration of varaibles used at mBFW::data ------------------------------------------------------
+    int networkSize;
+    double acceptanceThreshold;
+    int ensembleSize;
+    int coreNum;
     std::string target;
     fs::path p;
     int maxTime;
@@ -35,8 +40,9 @@ namespace mBFW::data{
         maxTrialTime = std::ceil(t_networkSize/t_acceptanceThreshold);
         acceptanceThreshold = t_acceptanceThreshold;
         deletion = t_deletion;
-        target = defaultFile(t_networkSize, t_acceptanceThreshold);
         logBinDelta = t_logBinDelta;
+
+        target = fileName::base(t_networkSize, t_acceptanceThreshold);
 
     }
 
@@ -126,9 +132,10 @@ namespace mBFW::data{
         return binned;
     }
 
-    //* Process Time-X (Trial)
+    //* ----------------------------------------------------- Process for each observables --------------------------------------------------------
+    //* Process (Trial)Time-X
     //! Order Parameter (Trial), Mean cluster Size (Trial), Order Parameter Variance (Trial)
-    void time_X(const std::string& t_type){
+    std::vector<double> time_X(const std::string& t_type){
         //* Define Directories
         const std::string baseDirectory = rootPath + t_type + "/";
         const std::string averageDirectory = defineAdditionalDirectory(baseDirectory, "average");
@@ -141,10 +148,16 @@ namespace mBFW::data{
         const std::vector<int> ensembleSizeList = extractEnsembleList(targetFileNameList);
         const int totalEnsembleSize = std::accumulate(ensembleSizeList.begin(), ensembleSizeList.end(), 0);
 
-        //* Define average vector
+        //* Break the function if only one ensemble file exists
+        if (ensembleSizeList.size() <= 1 && deleteFileNameList.size() == 1){
+            std::vector<double> average;
+            CSV::read(averageDirectory + deleteFileNameList[0], average);
+            return average;
+        }
+
+        //* Define average vector corresponds to each observables
         std::vector<double> average;
         t_type.find("trial") != t_type.npos ? average.assign(maxTrialTime, 0.0) : average.assign(maxTime, 0.0);
-
 
         //* Read target files and average them according to weight corresponding to each ensemble size
         for (int i=0; i<targetFileNameList.size(); ++i){
@@ -155,7 +168,7 @@ namespace mBFW::data{
         }
 
         //* Write averaged file into base diretory
-        CSV::write(baseDirectory + defaultFileName(networkSize, acceptanceThreshold, totalEnsembleSize, 0), average);
+        CSV::write(baseDirectory + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize, 0), average);
 
         //* Trim averaged data
         average.erase(std::remove_if(average.begin(), average.end(), [](const auto& value){return std::isnan(value) || value==0;}), average.end());
@@ -169,7 +182,10 @@ namespace mBFW::data{
         for (const std::string& deleteFileName : deleteFileNameList){
             conditionallyDeleteFile(averageDirectory + deleteFileName);
         }
-        CSV::write(averageDirectory + defaultFileName(networkSize, acceptanceThreshold, totalEnsembleSize), average);
+        CSV::write(averageDirectory + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize), average);
+
+        //* Return average value of observables
+        return average;
     }
 
     //* Process cluster size distribution
@@ -239,28 +255,117 @@ namespace mBFW::data{
 
             //* Write averaged data and write log binned data
             if (standard == "OP"){
-                CSV::write(baseDirectory + filename_orderParameter(networkSize, acceptanceThreshold, totalEnsembleSize, repeater, 0), average);
-                CSV::write(logBinDirectory + filename_orderParameter(networkSize, acceptanceThreshold, totalEnsembleSize, repeater), binned);
+                CSV::write(baseDirectory + fileName::NGEOP(networkSize, acceptanceThreshold, totalEnsembleSize, repeater, 0), average);
+                CSV::write(logBinDirectory + fileName::NGEOP(networkSize, acceptanceThreshold, totalEnsembleSize, repeater), binned);
             }
             else{
-                CSV::write(baseDirectory + filename_time(networkSize, acceptanceThreshold, totalEnsembleSize, repeater, 0), average);
-                CSV::write(logBinDirectory + filename_time(networkSize, acceptanceThreshold, totalEnsembleSize, repeater), binned);
+                CSV::write(baseDirectory + fileName::NGET(networkSize, acceptanceThreshold, totalEnsembleSize, repeater, 0), average);
+                CSV::write(logBinDirectory + fileName::NGET(networkSize, acceptanceThreshold, totalEnsembleSize, repeater), binned);
             }
         }
     }
 
-    //* Run Every observables
-    void process(){
-        time_X("orderParameter");
-        time_X("orderParameter_trial");
-        time_X("meanClusterSize");
-        time_X("meanClusterSize_trial");
-        time_X("orderParameterVariance");
-        time_X("orderParameterVariance_trial");
-        clustersizeDist();
-        clustersizeDist("_exact");
-        clustersizeDist("_time");
+    //* Find t_a which is intercept with t-axis of tangential line of order parameter curve at the inflection point (when slope is maximum)
+    void findTa(const std::vector<double>& t_orderParameter){
+        //* Smooth order parameter curve
+        std::vector<double> smoothedOrderParameter(maxTime, 0.0);
+        for (int i=1; i<maxTime-1; ++i){
+            smoothedOrderParameter[i] = t_orderParameter[i] + t_orderParameter[i-1] + t_orderParameter[i+1];
+        }
+        smoothedOrderParameter /= 3;
+        smoothedOrderParameter[0] = t_orderParameter[0];
+        smoothedOrderParameter[maxTime-1] = t_orderParameter[maxTime-1];
 
+        //* Find maximum slope  and infelection point
+        double maxSlope = 0.0;
+        int inflectionIndex = 0;
+        for (int i=0; i<maxTime-1; ++i){
+            const double slope = smoothedOrderParameter[i+1] - smoothedOrderParameter[i];
+            if (maxSlope < slope){
+                maxSlope = slope;
+                inflectionIndex = i;
+            }
+        }
+        maxSlope *= networkSize;
+        const std::vector<double> inflectionPoint = {(inflectionIndex+0.5)/networkSize, (smoothedOrderParameter[inflectionIndex] + smoothedOrderParameter[inflectionIndex+1])*0.5};
+
+        //* Calculate t_a with precision
+        const double t_a = (int)((inflectionPoint[0] - inflectionPoint[1]/maxSlope)*networkSize)/(double)networkSize;
+
+        //* Print at console and orderParameter/inflection.txt
+        std::ofstream writeFile;
+        writeFile.open(rootPath + "orderParameter/inflection.txt", std::ios_base::app);
+        std::cout << "For " << fileName::base(networkSize, acceptanceThreshold) <<", inflection point: (" << inflectionPoint[0] << ", " << inflectionPoint[1] << ") with t_a: " << t_a <<"\n";
+        writeFile << "For " << fileName::base(networkSize, acceptanceThreshold) <<", inflection point: (" << inflectionPoint[0] << ", " << inflectionPoint[1] << ") with t_a: " << std::setprecision(15) << t_a <<"\n";
+    }
+
+    //* ------------------------------------------------------------- Integration of each observables data process -----------------------------------------------------
+    //* Run selected observables at check list
+    void process(const std::map<std::string, bool>& t_checkList){
+        if (t_checkList.at("orderParameter")){
+            std::vector<double> orderParameter = time_X("orderParameter");
+            findTa(orderParameter);
+        }
+        else if (t_checkList.at("orderParameter_trial")){
+            std::vector<double> orderParameter_trial = time_X("orderParameter_trial");
+        }
+        else if (t_checkList.at("meanClusterSize")){
+            std::vector<double> meanClusterSize = time_X("meanClusterSize");
+        }
+        else if (t_checkList.at("meanClusterSize_trial")){
+            std::vector<double> meanClusterSize_trial = time_X("meanClusterSize_trial");
+        }
+        else if (t_checkList.at("orderParameterVariance")){
+            std::vector<double> orderParameterVariance = time_X("orderParameterVariance");
+        }
+        else if (t_checkList.at("orderParameterVariance_trial")){
+            std::vector<double> orderParameterVariance_trial = time_X("orderParameterVariance_trial");
+        }
+        else if (t_checkList.at("clustersizeDist")){
+            clustersizeDist();
+        }
+        else if (t_checkList.at("clustersizeDist_exact")){
+            clustersizeDist("_exact");
+        }
+        else if (t_checkList.at("clustersizeDist_time")){
+            clustersizeDist("_time");
+        }
+    }
+
+    void temporary_variance(const int& t_networkSize, const double& t_acceptanceThreshold){
+        std::vector<std::string> fileList;
+        fileList = findTargetFileNameList(rootPath + "orderParameterVariance/");
+        for (auto file : fileList){
+            std::vector<double> variance;
+            CSV::read(rootPath + "orderParameterVariance/"+file, variance);
+            for (auto& e : variance){
+                e<0 ? e = 0 : e=sqrt(e) * t_networkSize;
+            }
+            CSV::write(rootPath + "orderParameterVariance/"+file, variance);
+        }
+        fileList = findTargetFileNameList(rootPath + "orderParameterVariance_trial/");
+        for (auto file : fileList){
+            std::vector<double> variance;
+            CSV::read(rootPath + "orderParameterVariance_trial/"+file, variance);
+            for (auto& e : variance){
+                e<0 ? e = 0 : e=sqrt(e) * t_networkSize;
+            }
+            CSV::write(rootPath + "orderParameterVariance_trial/"+file, variance);
+        }
+        fileList = findTargetFileNameList(rootPath + "orderParameterVariance/average/");
+        for (auto file : fileList){
+            std::vector<double> variance;
+            CSV::read(rootPath + "orderParameterVariance/average/"+file, variance);
+            variance = elementPow(variance, 0.5) * t_networkSize;
+            CSV::write(rootPath + "orderParameterVariance/average/"+file, variance);
+        }
+        fileList = findTargetFileNameList(rootPath + "orderParameterVariance_trial/average/");
+        for (auto file : fileList){
+            std::vector<double> variance;
+            CSV::read(rootPath + "orderParameterVariance_trial/average/"+file, variance);
+            variance = elementPow(variance, 0.5) * t_networkSize;
+            CSV::write(rootPath + "orderParameterVariance_trial/average/"+file, variance);
+        }
     }
 
     // //! average process
@@ -270,7 +375,7 @@ namespace mBFW::data{
     //     std::map<T, double> average, temp;
     //     std::map<T, int> sampledAverage;
     //     for (int core=0; core<fileNum; ++core){
-    //         const std::string readFile = t_directory + defaultFileName(networkSize, acceptanceThreshold, ensembleSizeList[core], core);
+    //         const std::string readFile = t_directory + fileName::NGE(networkSize, acceptanceThreshold, ensembleSizeList[core], core);
     //         CSV::read(readFile, temp);
     //         average += temp;
     //         sampleNum(sampledAverage, temp);
@@ -347,19 +452,19 @@ namespace mBFW::data{
     //     std::vector<double> average(networkSize);
     //     std::vector<double> temp(networkSize);
     //     for (int core=0; core<fileNum; ++core){
-    //         const std::string readFile = baseDirectory + defaultFileName(networkSize, acceptanceThreshold, ensembleSizeList[core], core);
+    //         const std::string readFile = baseDirectory + fileName::NGE(networkSize, acceptanceThreshold, ensembleSizeList[core], core);
     //         CSV::read(readFile, temp);
     //         average += temp;
     //         removeFile(readFile);
     //     }
     //     average /= fileNum;
 
-    //     const std::string writeFile1 = baseDirectory + defaultFileName(networkSize, acceptanceThreshold, totalEnsembleSize, 0);
-    //     const std::string writeFile2 = baseDirectory + "average/" + defaultFileName(networkSize, acceptanceThreshold, totalEnsembleSize);
+    //     const std::string writeFile1 = baseDirectory + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize, 0);
+    //     const std::string writeFile2 = baseDirectory + "average/" + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize);
     //     CSV::write(writeFile1, average);
     //     CSV::write(writeFile2, average);
 
-    //     const std::string removeFileName = baseDirectory + "average/" + defaultFileName(networkSize, acceptanceThreshold, ensembleSizeList[0]);
+    //     const std::string removeFileName = baseDirectory + "average/" + fileName::NGE(networkSize, acceptanceThreshold, ensembleSizeList[0]);
     //     removeFile(removeFileName);
 
     //     //* log bin w.r.t t-t_c
@@ -370,9 +475,9 @@ namespace mBFW::data{
     //             raw[(double)t/networkSize-t_c] = average[t];
     //         }
     //         const std::map<double, double> binned = logBin(raw);
-    //         const std::string writeFile3 = baseDirectory + "logBin/" + defaultFileName(networkSize, acceptanceThreshold, totalEnsembleSize);
+    //         const std::string writeFile3 = baseDirectory + "logBin/" + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize);
     //         CSV::write(writeFile3, binned);
-    //         const std::string removeFileName = baseDirectory + "logBin/" + defaultFileName(networkSize, acceptanceThreshold, ensembleSizeList[0]);
+    //         const std::string removeFileName = baseDirectory + "logBin/" + fileName::NGE(networkSize, acceptanceThreshold, ensembleSizeList[0]);
     //         removeFile(removeFileName);
     //     }
     // }
@@ -386,7 +491,7 @@ namespace mBFW::data{
     //     for (auto state : states){
     //         //* average
     //         const std::map<double, double> avg = average(baseDirectory + state + "/", 0.0);
-    //         const std::string writeFile1 = baseDirectory + state + "/" + defaultFileName(networkSize, acceptanceThreshold, totalEnsembleSize, 0);
+    //         const std::string writeFile1 = baseDirectory + state + "/" + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize, 0);
     //         CSV::write(writeFile1, avg);
 
     //         //* merge
@@ -394,17 +499,17 @@ namespace mBFW::data{
     //         sampleNum(sampledMerge, avg);
     //     }
     //     merge /= sampledMerge;
-    //     const std::string writeFile3 = baseDirectory + "merge/" + defaultFileName(networkSize, acceptanceThreshold, totalEnsembleSize);
+    //     const std::string writeFile3 = baseDirectory + "merge/" + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize);
     //     CSV::write(writeFile3, merge);
-    //     const std::string removeFileName1 = baseDirectory + "merge/" + defaultFileName(networkSize, acceptanceThreshold, ensembleSizeList[0]);
+    //     const std::string removeFileName1 = baseDirectory + "merge/" + fileName::NGE(networkSize, acceptanceThreshold, ensembleSizeList[0]);
     //     removeFile(removeFileName1);
 
     //     //* log bin w.r.t t_c-t
     //     merge = minus_first(t_c, merge);
     //     const std::map<double, double> binned = logBin(merge);
-    //     const std::string writeFile2 = baseDirectory + "logBin/" + defaultFileName(networkSize, acceptanceThreshold, totalEnsembleSize);
+    //     const std::string writeFile2 = baseDirectory + "logBin/" + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize);
     //     CSV::write(writeFile2, binned);
-    //     const std::string removeFileName2 = baseDirectory + "logBin/" + defaultFileName(networkSize, acceptanceThreshold, ensembleSizeList[0]);
+    //     const std::string removeFileName2 = baseDirectory + "logBin/" + fileName::NGE(networkSize, acceptanceThreshold, ensembleSizeList[0]);
     //     removeFile(removeFileName2);
     // }
 
@@ -431,9 +536,9 @@ namespace mBFW::data{
     //         //* Linear Binning
     //         if (t_observable == "orderParameterDistribution"){
     //             const std::map<double, double> binned = linearBin(avg);
-    //             const std::string writeFile2 = baseDirectory + "linearBin/" + filename_time(networkSize, acceptanceThreshold, totalEnsembleSize, checkPoint);
+    //             const std::string writeFile2 = baseDirectory + "linearBin/" + fileName::NGET(networkSize, acceptanceThreshold, totalEnsembleSize, checkPoint);
     //             CSV::write(writeFile2, avg);
-    //             const std::string removeFileName2 = baseDirectory + "linearBin/" + filename_time(networkSize, acceptanceThreshold, ensembleSizeList[0], checkPoint);
+    //             const std::string removeFileName2 = baseDirectory + "linearBin/" + fileName::NGET(networkSize, acceptanceThreshold, ensembleSizeList[0], checkPoint);
     //             removeFile(removeFileName2);
     //         }
     //         //* Log Binning
@@ -441,9 +546,9 @@ namespace mBFW::data{
     //             std::map<double, double> binned = logBin(avg);
     //             const double tot = accumulate(binned);
     //             binned /= tot;
-    //             const std::string writeFile2 = baseDirectory + "logBin/" + filename_orderParameter(networkSize, acceptanceThreshold, totalEnsembleSize, checkPoint);
+    //             const std::string writeFile2 = baseDirectory + "logBin/" + fileName::NGEOP(networkSize, acceptanceThreshold, totalEnsembleSize, checkPoint);
     //             CSV::write(writeFile2, binned);
-    //             const std::string removeFileName2 = baseDirectory + "logBin/" + filename_orderParameter(networkSize, acceptanceThreshold, ensembleSizeList[0], checkPoint);
+    //             const std::string removeFileName2 = baseDirectory + "logBin/" + fileName::NGEOP(networkSize, acceptanceThreshold, ensembleSizeList[0], checkPoint);
     //             removeFile(removeFileName2);
     //         }
     //     }
@@ -458,16 +563,16 @@ namespace mBFW::data{
 
     //         //* average
     //         const std::map<T, double> avg = averageDistribution(t_observable, baseDirectory, t_check, 0.0);
-    //         const std::string writeFile1 = baseDirectory + defaultFileName(networkSize, acceptanceThreshold, totalEnsembleSize, 0);
+    //         const std::string writeFile1 = baseDirectory + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize, 0);
     //         CSV::write(writeFile1, avg);
 
     //         //* Log binning
     //         std::map<double, double> binned = logBin(avg);
     //         const double tot = accumulate(binned);
     //         binned /= tot;
-    //         const std::string writeFile2 = baseDirectory + "logBin/" + defaultFileName(networkSize, acceptanceThreshold, totalEnsembleSize);
+    //         const std::string writeFile2 = baseDirectory + "logBin/" + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize);
     //         CSV::write(writeFile2, binned);
-    //         const std::string removeFileName = baseDirectory + "logBin/" + defaultFileName(networkSize, acceptanceThreshold, ensembleSizeList[0]);
+    //         const std::string removeFileName = baseDirectory + "logBin/" + fileName::NGE(networkSize, acceptanceThreshold, ensembleSizeList[0]);
     //         removeFile(removeFileName);
     //     }
     // }
@@ -480,14 +585,14 @@ namespace mBFW::data{
 
     //     //* average
     //     const std::map<T, double> avg = average(baseDirectory, t_check);
-    //     const std::string writeFile1 = baseDirectory + defaultFileName(networkSize, acceptanceThreshold, totalEnsembleSize, 0);
+    //     const std::string writeFile1 = baseDirectory + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize, 0);
     //     CSV::write(writeFile1, avg);
 
     //     //* Log Binning
     //     const std::map<double, double> binned = logBin(avg);
-    //     const std::string writeFile2 = baseDirectory + "logBin/" + defaultFileName(networkSize, acceptanceThreshold, totalEnsembleSize);
+    //     const std::string writeFile2 = baseDirectory + "logBin/" + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize);
     //     CSV::write(writeFile2, binned);
-    //     const std::string removeFileName = baseDirectory + "logBin/" + defaultFileName(networkSize, acceptanceThreshold, ensembleSizeList[0]);
+    //     const std::string removeFileName = baseDirectory + "logBin/" + fileName::NGE(networkSize, acceptanceThreshold, ensembleSizeList[0]);
     //     removeFile(removeFileName);
     // }
 

@@ -1,11 +1,15 @@
 # pragma once
 
-#include <tuple>
+#include <iostream>
+#include <fstream>
 #include <set>
 
+#include "fileName.hpp"
+
 namespace mBFW::parameters{
-    // double m_c;
-    // double t_c;
+    const std::string rootPath = "../data/mBFW_hybrid/";
+
+    //* Set parameter for orderParameter_clusterSizeDist
     std::set<double> set_orderParameter_clusterSizeDist(const int& t_networkSize, const double& t_acceptanceThreshold){
         std::set<double> orderParameter_clusterSizeDist;
         if (t_acceptanceThreshold == 0.2){
@@ -41,6 +45,7 @@ namespace mBFW::parameters{
         return orderParameter_clusterSizeDist;
     }
 
+    //* Set parameter for time_clusterSizeDist
     std::set<double> set_time_clusterSizeDist(const int& t_networkSize, const double& t_acceptanceThreshold){
         std::set<double> time_clusterSizeDist;
         if (t_acceptanceThreshold == 0.2){
@@ -76,7 +81,23 @@ namespace mBFW::parameters{
         return time_clusterSizeDist;
     }
 
-
+    //* Read t_a from "orderParameter/inflection.txt" and set t_a
+    double set_ta(const int& t_networkSize, const double& t_acceptanceThreshold){
+        double t_a = 0.0;
+        std::ifstream inflectionFile(rootPath + "orderParameter/inflection.txt");
+        std::string line;
+        while (getline(inflectionFile, line)){
+            //* Find line for input network size and acceptance threshold
+            if (line.find(fileName::base(t_networkSize, t_acceptanceThreshold)) != line.npos){
+                line = line.substr(line.find("t_a")+5);
+                t_a = std::stod(line);
+            }
+        }
+        if (!t_a){
+            std::cout << "Can't find t_a\n";
+        }
+        return t_a;
+    }
 
 
 

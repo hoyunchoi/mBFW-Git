@@ -14,14 +14,22 @@
 #include "../library-Git/pcg_random.hpp"
 
 #include "parameters.hpp"
-#include "mBFW.hpp"
+#include "fileName.hpp"
 
 namespace mBFW::generate{
+    const std::string rootPath = "../data/mBFW_hybrid/";
+
     //*--------------------------------------------Declaration of variables---------------------------------------------------------
-    //* Declaration of variables only used at mBFW::generate namespace
+    //* Declaration of variables used at mBFW::generate namespace
+    int networkSize;
+    double acceptanceThreshold;
+    int ensembleSize;
+    int coreNum;
     int randomEngineSeed;
     double precision;
-    double degenerated;
+    
+    int maxTime;
+    int maxTrialTime;
 
     //* Declaration of Random Engine
     pcg32 randomEngine;
@@ -70,8 +78,8 @@ namespace mBFW::generate{
         nodeDistribution.param(std::uniform_int_distribution<int>::param_type(0, networkSize-1));
 
         //* Resize observables
-        const int maxTime = t_networkSize;
-        const int maxTrialTime = std::floor(maxTime/t_acceptanceThreshold);
+        maxTime = t_networkSize;
+        maxTrialTime = std::floor(maxTime/t_acceptanceThreshold);
         orderParameter.assign(maxTime, 0.0);
         orderParameter_trial.assign(maxTrialTime, 0.0);
         secondMoment.assign(maxTime, 0.0);
@@ -218,101 +226,127 @@ namespace mBFW::generate{
         namespace fs = std::filesystem;
 
         //! Average and Save Order Parameter
-        orderParameter /= ensembleSize;
-        const std::string orderParameterPath = rootPath + "orderParameter/";
-        if (!fs::exists(orderParameterPath)){
-            fs::create_directories(orderParameterPath);
+        {
+            orderParameter /= ensembleSize;
+            const std::string orderParameterPath = rootPath + "orderParameter/";
+            if (!fs::exists(orderParameterPath)){
+                fs::create_directories(orderParameterPath);
+            }
+            CSV::write(orderParameterPath + fileName::NGE(networkSize, acceptanceThreshold, ensembleSize, coreNum), orderParameter);
         }
-        CSV::write(orderParameterPath + defaultFileName(networkSize, acceptanceThreshold, ensembleSize, coreNum), orderParameter);
 
         //! Average and Save Trial Order Parameter
-        orderParameter_trial /= ensembleSize;
-        const std::string orderParameter_trialPath = rootPath + "orderParameter_trial/";
-        if (!fs::exists(orderParameter_trialPath)){
-            fs::create_directories(orderParameter_trialPath);
+        {
+            orderParameter_trial /= ensembleSize;
+            const std::string orderParameter_trialPath = rootPath + "orderParameter_trial/";
+            if (!fs::exists(orderParameter_trialPath)){
+                fs::create_directories(orderParameter_trialPath);
+            }
+            CSV::write(orderParameter_trialPath + fileName::NGE(networkSize, acceptanceThreshold, ensembleSize, coreNum), orderParameter_trial);
         }
-        CSV::write(orderParameter_trialPath + defaultFileName(networkSize, acceptanceThreshold, ensembleSize, coreNum), orderParameter_trial);
 
         //! Average and Save Order Parameter Variance
-        secondMoment /= ensembleSize;
-        const std::vector<double> orderParameterVariance = secondMoment - elementPow(orderParameter, 2.0);
-        const std::string orderParameterVariancePath = rootPath + "orderParameterVariance/";
-        if (!fs::exists(orderParameterVariancePath)){
-            fs::create_directories(orderParameterVariancePath);
+        {
+            secondMoment /= ensembleSize;
+            std::vector<double> orderParameterVariance(maxTime, 0.0);
+            for (int i=0; i<maxTime; ++i){
+                const double temp = secondMoment[i] - pow(orderParameter[i], 2.0);
+                temp<0 ? orderParameterVariance[i] = 0.0 :orderParameterVariance[i] = sqrt(temp) * networkSize;
+            }
+            const std::string orderParameterVariancePath = rootPath + "orderParameterVariance/";
+            if (!fs::exists(orderParameterVariancePath)){
+                fs::create_directories(orderParameterVariancePath);
+            }
+            CSV::write(orderParameterVariancePath + fileName::NGE(networkSize, acceptanceThreshold, ensembleSize, coreNum), orderParameterVariance);
         }
-        CSV::write(orderParameterVariancePath + defaultFileName(networkSize, acceptanceThreshold, ensembleSize, coreNum), orderParameterVariance);
 
         //! Average and Save Order Parameter Trial Variance
-        secondMoment_trial /= ensembleSize;
-        const std::vector<double> orderParameterVariance_trial = secondMoment_trial - elementPow(orderParameter_trial, 2.0);
-        const std::string orderParameterVariance_trialPath = rootPath + "orderParameterVariance_trial/";
-        if (!fs::exists(orderParameterVariance_trialPath)){
-            fs::create_directories(orderParameterVariance_trialPath);
+        {
+            secondMoment_trial /= ensembleSize;
+            std::vector<double> orderParameterVariance_trial(maxTrialTime, 0.0);
+            for (int i=0; i<maxTrialTime; ++i){
+                const double temp = secondMoment_trial[i] - pow(orderParameter_trial[i], 2.0);
+                temp<0 ? orderParameterVariance_trial[i] = 0.0 : orderParameterVariance_trial[i] = sqrt(temp) * networkSize;
+            }
+            const std::string orderParameterVariance_trialPath = rootPath + "orderParameterVariance_trial/";
+            if (!fs::exists(orderParameterVariance_trialPath)){
+                fs::create_directories(orderParameterVariance_trialPath);
+            }
+            CSV::write(orderParameterVariance_trialPath + fileName::NGE(networkSize, acceptanceThreshold, ensembleSize, coreNum), orderParameterVariance_trial);
         }
-        CSV::write(orderParameterVariance_trialPath + defaultFileName(networkSize, acceptanceThreshold, ensembleSize, coreNum), orderParameterVariance_trial);
 
         //! Average and Save Mean Cluster Size
-        meanClusterSize /= ensembleSize;
-        const std::string meanClusterSizePath = rootPath + "meanClusterSize/";
-        if (!fs::exists(meanClusterSizePath)){
-            fs::create_directories(meanClusterSizePath);
+        {
+            meanClusterSize /= ensembleSize;
+            const std::string meanClusterSizePath = rootPath + "meanClusterSize/";
+            if (!fs::exists(meanClusterSizePath)){
+                fs::create_directories(meanClusterSizePath);
+            }
+            CSV::write(meanClusterSizePath + fileName::NGE(networkSize, acceptanceThreshold, ensembleSize, coreNum), meanClusterSize);
         }
-        CSV::write(meanClusterSizePath + defaultFileName(networkSize, acceptanceThreshold, ensembleSize, coreNum), meanClusterSize);
 
         //! Average and Save Trial Mean Cluster Size
-        meanClusterSize_trial /= ensembleSize;
-        const std::string meanClusterSize_trialPath = rootPath + "meanClusterSize_trial/";
-        if (!fs::exists(meanClusterSize_trialPath)){
-            fs::create_directories(meanClusterSize_trialPath);
+        {
+            meanClusterSize_trial /= ensembleSize;
+            const std::string meanClusterSize_trialPath = rootPath + "meanClusterSize_trial/";
+            if (!fs::exists(meanClusterSize_trialPath)){
+                fs::create_directories(meanClusterSize_trialPath);
+            }
+            CSV::write(meanClusterSize_trialPath + fileName::NGE(networkSize, acceptanceThreshold, ensembleSize, coreNum), meanClusterSize_trial);
         }
-        CSV::write(meanClusterSize_trialPath + defaultFileName(networkSize, acceptanceThreshold, ensembleSize, coreNum), meanClusterSize_trial);
 
         //! Cluster Size Distribution
-        const std::string clusterSizeDistPath = rootPath + "clusterSizeDist/";
-        if (!fs::exists(clusterSizeDistPath)){
-            fs::create_directories(clusterSizeDistPath);
-        }
-        for (const double& op : orderParameter_clusterSizeDist){
-            std::map<int, double> trimmed;
-            const long long total = std::accumulate(clusterSizeDist[op].begin(),clusterSizeDist[op].end(), 0);
-            for (int cs=0; cs<networkSize; ++cs){
-                if (clusterSizeDist[op][cs]){
-                    trimmed[cs] = (double)clusterSizeDist[op][cs]/total;
-                }
+        {
+            const std::string clusterSizeDistPath = rootPath + "clusterSizeDist/";
+            if (!fs::exists(clusterSizeDistPath)){
+                fs::create_directories(clusterSizeDistPath);
             }
-            CSV::write(clusterSizeDistPath + filename_orderParameter(networkSize, acceptanceThreshold, ensembleSize, op, coreNum), trimmed);
+            for (const double& op : orderParameter_clusterSizeDist){
+                std::map<int, double> trimmed;
+                const long long total = std::accumulate(clusterSizeDist[op].begin(),clusterSizeDist[op].end(), 0);
+                for (int cs=0; cs<networkSize; ++cs){
+                    if (clusterSizeDist[op][cs]){
+                        trimmed[cs] = (double)clusterSizeDist[op][cs]/total;
+                    }
+                }
+                CSV::write(clusterSizeDistPath + fileName::NGEOP(networkSize, acceptanceThreshold, ensembleSize, op, coreNum), trimmed);
+            }
         }
 
         //! Cluster Size Distribution Exact
-        const std::string clusterSizeDist_exactPath = rootPath + "clusterSizeDist_exact/";
-        if (!fs::exists(clusterSizeDist_exactPath)){
-            fs::create_directories(clusterSizeDist_exactPath);
-        }
-        for (const double& op : orderParameter_clusterSizeDist){
-            std::map<int, double> trimmed;
-            const long long total = std::accumulate(clusterSizeDist_exact[op].begin(),clusterSizeDist_exact[op].end(), 0);
-            for (int cs=0; cs<networkSize; ++cs){
-                if (clusterSizeDist_exact[op][cs]){
-                    trimmed[cs] = (double)clusterSizeDist_exact[op][cs]/total;
-                }
+        {
+            const std::string clusterSizeDist_exactPath = rootPath + "clusterSizeDist_exact/";
+            if (!fs::exists(clusterSizeDist_exactPath)){
+                fs::create_directories(clusterSizeDist_exactPath);
             }
-            CSV::write(clusterSizeDist_exactPath + filename_orderParameter(networkSize, acceptanceThreshold, ensembleSize, op, coreNum), trimmed);
+            for (const double& op : orderParameter_clusterSizeDist){
+                std::map<int, double> trimmed;
+                const long long total = std::accumulate(clusterSizeDist_exact[op].begin(),clusterSizeDist_exact[op].end(), 0);
+                for (int cs=0; cs<networkSize; ++cs){
+                    if (clusterSizeDist_exact[op][cs]){
+                        trimmed[cs] = (double)clusterSizeDist_exact[op][cs]/total;
+                    }
+                }
+                CSV::write(clusterSizeDist_exactPath + fileName::NGEOP(networkSize, acceptanceThreshold, ensembleSize, op, coreNum), trimmed);
+            }
         }
 
         //! Cluster Size Distribution Time
-        const std::string clusterSizeDist_timePath = rootPath + "clusterSizeDist_time/";
-        if (!fs::exists(clusterSizeDist_timePath)){
-            fs::create_directories(clusterSizeDist_timePath);
-        }
-        for (const double& t : time_clusterSizeDist){
-            std::map<int, double> trimmed;
-            const long long total = std::accumulate(clusterSizeDist_time[t].begin(), clusterSizeDist_time[t].end(), 0);
-            for (int cs=0; cs<networkSize; ++cs){
-                if (clusterSizeDist_time[t][cs]){
-                    trimmed[cs] = (double)clusterSizeDist_time[t][cs]/total;
-                }
+        {
+            const std::string clusterSizeDist_timePath = rootPath + "clusterSizeDist_time/";
+            if (!fs::exists(clusterSizeDist_timePath)){
+                fs::create_directories(clusterSizeDist_timePath);
             }
-            CSV::write(clusterSizeDist_timePath + filename_time(networkSize, acceptanceThreshold, ensembleSize, t, coreNum), trimmed);
+            for (const double& t : time_clusterSizeDist){
+                std::map<int, double> trimmed;
+                const long long total = std::accumulate(clusterSizeDist_time[t].begin(), clusterSizeDist_time[t].end(), 0);
+                for (int cs=0; cs<networkSize; ++cs){
+                    if (clusterSizeDist_time[t][cs]){
+                        trimmed[cs] = (double)clusterSizeDist_time[t][cs]/total;
+                    }
+                }
+                CSV::write(clusterSizeDist_timePath + fileName::NGET(networkSize, acceptanceThreshold, ensembleSize, t, coreNum), trimmed);
+            }
         }
     }//* End of function mBFW::generate::save
 }//* End of namespace mBFW::generate
