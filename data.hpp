@@ -54,6 +54,7 @@ namespace mBFW::data{
     //* Delete already read files
     void conditionallyDeleteFile(const std::string& t_delitionFileName){
         if (deletion){
+            std::cout << "Deleting file " << t_delitionFileName << "\n";
             CSV::deleteFile(t_delitionFileName);
         }
     }
@@ -208,6 +209,11 @@ namespace mBFW::data{
             //* Find Ensemble Size of each target files and total ensemble size
             const std::vector<int> ensembleSizeList = extractEnsembleList(targetFileNameList_repeater);
             const int totalEnsembleSize = std::accumulate(ensembleSizeList.begin(), ensembleSizeList.end(), 0);
+
+            //* Break the reapeater if only one ensemble file exists
+            if (targetFileNameList_repeater.size() == 1){
+                break;
+            }
 
             //* Read target files and average them according to weight corresponding to each ensemble size
             std::map<int, double> average;

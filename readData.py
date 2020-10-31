@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import glob
 
-rootDirectory = "../data/mBFW/"
+rootDirectory = "../data/mBFW_hybrid/"
 observables = ["orderParameter", "orderParameter/", "meanClusterSize", "secondGiant" ,"interEventTime" ,"deltaAcceptance" ,"orderParameterDistribution" ,"clusterSizeDistribution" ,"ageDistribution/before" ,"ageDistribution/during", "interEventTimeDistribution/before", "interEventTimeDistribution/during", "deltaUpperBoundDistribution/before", "deltaUpperBoundDistribution/during" ,"deltaAcceptanceDistribution/before","deltaAcceptanceDistribution/during" ,"interEventTime_DeltaAcceptance" ,"upperBound_DeltaAcceptance" ,"deltaUpperBound_DeltaAcceptance", "dynamics", "dynamics/"]
 relativePath = ["/average/", "logBin/", "/average/", "/average/", "/logBin/", "/logBin/", "/linearBin/", "/logBin/", "/logBin/", "/logBin/", "/logBin/", "/logBin/", "/logBin/", "/logBin/", "/logBin/", "/logBin/", "/logBin/", "/logBin/", "/logBin/", "/before/", "during/"]
 
@@ -31,11 +31,11 @@ def filename_orderParameter(t_networkSize, t_acceptanceThreshold, t_orderParamet
 
 
 #* Read Observables
-def read(t_observable, t_networkSize, t_acceptanceThreshold, t_checkPoint=None):
+def read(t_observable, t_networkSize, t_acceptanceThreshold, t_reapeater=None):
     if t_observable == "orderParameterDistribution":
-        fileList = np.sort(glob.glob(directory[t_observable] + filename_time(t_networkSize, t_acceptanceThreshold, t_checkPoint)))
+        fileList = np.sort(glob.glob(directory[t_observable] + filename_time(t_networkSize, t_acceptanceThreshold, t_reapeater)))
     elif t_observable == "clusterSizeDistribution":
-        fileList = np.sort(glob.glob(directory[t_observable] + filename_orderParameter(t_networkSize, t_acceptanceThreshold, t_checkPoint)))
+        fileList = np.sort(glob.glob(directory[t_observable] + filename_orderParameter(t_networkSize, t_acceptanceThreshold, t_reapeater)))
     else:
         fileList = np.sort(glob.glob(directory[t_observable] + defaultFileName(t_networkSize, t_acceptanceThreshold)))
     if fileList.size == 0:
