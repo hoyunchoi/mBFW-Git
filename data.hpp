@@ -37,7 +37,7 @@ namespace mBFW::data{
         //! Input variables
         networkSize = t_networkSize;
         maxTime = t_networkSize;
-        maxTrialTime = std::ceil(t_networkSize/t_acceptanceThreshold);
+        maxTrialTime = std::floor(maxTime/t_acceptanceThreshold);
         acceptanceThreshold = t_acceptanceThreshold;
         deletion = t_deletion;
         logBinDelta = t_logBinDelta;
@@ -295,7 +295,6 @@ namespace mBFW::data{
         //* Print at console and orderParameter/inflection.txt
         std::ofstream writeFile;
         writeFile.open(rootPath + "orderParameter/inflection.txt", std::ios_base::app);
-        std::cout << "For " << fileName::base(networkSize, acceptanceThreshold) <<", inflection point: (" << inflectionPoint[0] << ", " << inflectionPoint[1] << ") with t_a: " << t_a <<"\n";
         writeFile << "For " << fileName::base(networkSize, acceptanceThreshold) <<", inflection point: (" << inflectionPoint[0] << ", " << inflectionPoint[1] << ") with t_a: " << std::setprecision(15) << t_a <<"\n";
     }
 
@@ -306,28 +305,28 @@ namespace mBFW::data{
             std::vector<double> orderParameter = time_X("orderParameter");
             findTa(orderParameter);
         }
-        else if (t_checkList.at("orderParameter_trial")){
+        if (t_checkList.at("orderParameter_trial")){
             std::vector<double> orderParameter_trial = time_X("orderParameter_trial");
         }
-        else if (t_checkList.at("meanClusterSize")){
+        if (t_checkList.at("meanClusterSize")){
             std::vector<double> meanClusterSize = time_X("meanClusterSize");
         }
-        else if (t_checkList.at("meanClusterSize_trial")){
+        if (t_checkList.at("meanClusterSize_trial")){
             std::vector<double> meanClusterSize_trial = time_X("meanClusterSize_trial");
         }
-        else if (t_checkList.at("orderParameterVariance")){
+        if (t_checkList.at("orderParameterVariance")){
             std::vector<double> orderParameterVariance = time_X("orderParameterVariance");
         }
-        else if (t_checkList.at("orderParameterVariance_trial")){
+        if (t_checkList.at("orderParameterVariance_trial")){
             std::vector<double> orderParameterVariance_trial = time_X("orderParameterVariance_trial");
         }
-        else if (t_checkList.at("clustersizeDist")){
+        if (t_checkList.at("clusterSizeDist")){
             clustersizeDist();
         }
-        else if (t_checkList.at("clustersizeDist_exact")){
+        if (t_checkList.at("clusterSizeDist_exact")){
             clustersizeDist("_exact");
         }
-        else if (t_checkList.at("clustersizeDist_time")){
+        if (t_checkList.at("clusterSizeDist_time")){
             clustersizeDist("_time");
         }
     }
