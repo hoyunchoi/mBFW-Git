@@ -1,5 +1,6 @@
 #pragma once
 #include <iostream>
+#include <sstream>
 #include <vector>
 #include <string>
 #include <cmath>
@@ -24,7 +25,7 @@ namespace mBFW::data{
     double acceptanceThreshold;
     int ensembleSize;
     int coreNum;
-    std::string target;
+    std::string baseName;
     fs::path p;
     int maxTime;
     int maxTrialTime;
@@ -42,7 +43,7 @@ namespace mBFW::data{
         deletion = t_deletion;
         logBinDelta = t_logBinDelta;
 
-        target = fileName::base(t_networkSize, t_acceptanceThreshold);
+        baseName = fileName::base(t_networkSize, t_acceptanceThreshold);
 
     }
 
@@ -66,11 +67,11 @@ namespace mBFW::data{
     }
 
     //* Find target file at input baseDirectory
-    const std::vector<std::string> findTargetFileNameList(const std::string& t_directory){
+    const std::vector<std::string> findTargetFileNameList(const std::string& t_directory, const std::string& t_target){
         std::vector<std::string> targetFileNameList;
         for (const auto& file : fs::directory_iterator(t_directory)){
             const std::string fileName = file.path().filename();
-            if (!fileName.find(target)){
+            if (!fileName.find(t_target)){
                 targetFileNameList.emplace_back(fileName);
             }
         }
@@ -79,8 +80,8 @@ namespace mBFW::data{
 
     //* Extract Ensemble Size from file name
     const int extractEnsemble(std::string t_fileName){
-        const int index = t_fileName.find(target);
-        t_fileName = t_fileName.substr(index + target.size()+2);
+        const int index = t_fileName.find(baseName);
+        t_fileName = t_fileName.substr(index + baseName.size()+2);
         return std::stoi(t_fileName.substr(0, t_fileName.find_first_of(",-")));
     }
 
@@ -141,8 +142,8 @@ namespace mBFW::data{
         const std::string averageDirectory = defineAdditionalDirectory(baseDirectory, "average");
 
         //* Find target files at base directory and average directory according to system size and acceptance threshold
-        const std::vector<std::string> targetFileNameList = findTargetFileNameList(baseDirectory);
-        const std::vector<std::string> deleteFileNameList = findTargetFileNameList(averageDirectory);
+        const std::vector<std::string> targetFileNameList = findTargetFileNameList(baseDirectory, baseName);
+        const std::vector<std::string> deleteFileNameList = findTargetFileNameList(averageDirectory, baseName);
 
         //* Extract list of ensemble size from 'targe file list' and get total ensemble size
         const std::vector<int> ensembleSizeList = extractEnsembleList(targetFileNameList);
@@ -196,8 +197,8 @@ namespace mBFW::data{
         const std::string logBinDirectory = defineAdditionalDirectory(baseDirectory, "logBin");
 
         //* Find target files at base directory and logBin directory corresponding to input system size and acceptance threshold
-        const std::vector<std::string> targetFileNameList = findTargetFileNameList(baseDirectory);
-        const std::vector<std::string> deleteFileNameList = findTargetFileNameList(logBinDirectory);
+        const std::vector<std::string> targetFileNameList = findTargetFileNameList(baseDirectory, baseName);
+        const std::vector<std::string> deleteFileNameList = findTargetFileNameList(logBinDirectory, baseName);
 
         //* Decide if the cluster size distribution is accumulated by order parameter/time
         std::string standard;
@@ -289,13 +290,16 @@ namespace mBFW::data{
         maxSlope *= networkSize;
         const std::vector<double> inflectionPoint = {(inflectionIndex+0.5)/networkSize, (smoothedOrderParameter[inflectionIndex] + smoothedOrderParameter[inflectionIndex+1])*0.5};
 
-        //* Calculate t_a with precision
-        const double t_a = (int)((inflectionPoint[0] - inflectionPoint[1]/maxSlope)*networkSize)/(double)networkSize;
+        //* Calculate t_a and m_a with precision
+        const int l_a = (inflectionPoint[0] - inflectionPoint[1]/maxSlope) * networkSize;
+        const double t_a = (double)l_a/networkSize;
+        const double m_a = smoothedOrderParameter[l_a];
 
-        //* Print at console and orderParameter/inflection.txt
+        //* Print at orderParameter/inflection.txt
         std::ofstream writeFile;
         writeFile.open(rootPath + "orderParameter/inflection.txt", std::ios_base::app);
-        writeFile << "For " << fileName::base(networkSize, acceptanceThreshold) <<", inflection point: (" << inflectionPoint[0] << ", " << inflectionPoint[1] << ") with t_a: " << std::setprecision(15) << t_a <<"\n";
+        writeFile << fileName::base(networkSize, acceptanceThreshold) << "\tinflection: " << std::setprecision(15) << inflectionPoint[0] << "," << inflectionPoint[1] << "\tt_a:" << t_a << ", m_a:" << m_a <<"\n";
+        writeFile.close();
     }
 
     //* ------------------------------------------------------------- Integration of each observables data process -----------------------------------------------------
@@ -330,6 +334,77 @@ namespace mBFW::data{
             clustersizeDist("_time");
         }
     }
+
+    const int temporary_Nstr(const std::string N_str){
+        if (N_str == "1.0e+04"){
+            return 10000;
+        }
+        else if (N_str == "2.0e+04"){
+            return 20000;
+        }
+        else if (N_str == "2.0e+04"){
+            return 20000;
+        }
+        else if (N_str == "4.0e+04"){
+            return 40000;
+        }
+        else if (N_str == "8.0e+04"){
+            return 80000;
+        }
+        else if (N_str == "1.6e+05"){
+            return 160000;
+        }
+        else if (N_str == "3.2e+05"){
+            return 320000;
+        }
+        else if (N_str == "6.4e+05"){
+            return 640000;
+        }
+        else if (N_str == "1.3e+06"){
+            return 1280000;
+        }
+        else if (N_str == "2.6e+06"){
+            return 2560000;
+        }
+        else if (N_str == "5.1e+06"){
+            return 5120000;
+        }
+        else if (N_str == "1.0e+07"){
+            return 10240000;
+        }
+        else{
+            std::cout<<"check N_str\n";
+            return 0;
+        }
+    }
+    void temporary_inflecton(){
+        std::ofstream writeFile;
+        const std::string directory = rootPath + "orderParameter/";
+        std::ifstream file(directory + "inflection.txt");
+        std::string currentString;
+        writeFile.open(rootPath + "orderParameter/inflection1.txt", std::ios_base::app);
+        while (getline(file, currentString)){
+            const int N = temporary_Nstr(currentString.substr(currentString.find("N")+1, 7));
+            const double G = std::stod(currentString.substr(currentString.find("G")+1, 3));
+            const std::string inflection = currentString.substr(currentString.find("(")+1, currentString.find(")")-currentString.find("(")-1);
+            const double inflection_time = std::stod(inflection.substr(0,inflection.find(",")));
+            const double inflection_op = std::stod(inflection.substr(inflection.find(",")+2));
+            const double t_a = std::stod(currentString.substr(currentString.find("t_a")+5));
+
+            const std::vector<std::string> targetFileNameList = findTargetFileNameList(directory+"average/", fileName::base(N, G));
+            if (targetFileNameList.size()!=1){
+                std::cout<<"check N:"<< N <<", G:"<<G <<"\n";
+            }
+            std::vector<double> op;
+            CSV::read(directory+"average/" + targetFileNameList[0], op);
+            const int l_a = t_a*N;
+            const double m_a = op[l_a];
+
+            writeFile << fileName::base(N, G) << "\tinflection: " << std::setprecision(15) << inflection_time << "," << inflection_op << "\tt_a:" << t_a << ", m_a:" << m_a <<"\n";
+        }
+        writeFile.close();
+    }
+
 
     // void temporary_variance(const int& t_networkSize, const double& t_acceptanceThreshold){
     //     std::vector<std::string> fileList;

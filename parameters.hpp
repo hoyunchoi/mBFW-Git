@@ -3,6 +3,7 @@
 #include <iostream>
 #include <fstream>
 #include <set>
+#include <vector>
 
 #include "fileName.hpp"
 
@@ -81,22 +82,27 @@ namespace mBFW::parameters{
         return time_clusterSizeDist;
     }
 
-    //* Read t_a from "orderParameter/inflection.txt" and set t_a
-    double set_ta(const int& t_networkSize, const double& t_acceptanceThreshold){
+    //* Read t_a,m_a from "orderParameter/inflection.txt" and set t_a,m_a
+    const std::vector<double> set_ta(const int& t_networkSize, const double& t_acceptanceThreshold){
         double t_a = 0.0;
+        double m_a = 0.0;
         std::ifstream inflectionFile(rootPath + "orderParameter/inflection.txt");
         std::string line;
         while (getline(inflectionFile, line)){
             //* Find line for input network size and acceptance threshold
             if (line.find(fileName::base(t_networkSize, t_acceptanceThreshold)) != line.npos){
-                line = line.substr(line.find("t_a")+5);
-                t_a = std::stod(line);
+                const int t_loc = line.find("t_a");
+                const int m_loc = line.find("m_a");
+                const int length = m_loc-t_loc-6;
+
+                t_a = std::stod(line.substr(t_loc+4, length));
+                m_a = std::stod(line.substr(m_loc+4));
             }
         }
         if (!t_a){
             std::cout << "Can't find t_a\n";
         }
-        return t_a;
+        return std::vector<double>{t_a, m_a};
     }
 
 
