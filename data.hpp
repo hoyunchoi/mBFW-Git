@@ -331,41 +331,41 @@ namespace mBFW::data{
         }
     }
 
-    void temporary_variance(const int& t_networkSize, const double& t_acceptanceThreshold){
-        std::vector<std::string> fileList;
-        fileList = findTargetFileNameList(rootPath + "orderParameterVariance/");
-        for (auto file : fileList){
-            std::vector<double> variance;
-            CSV::read(rootPath + "orderParameterVariance/"+file, variance);
-            for (auto& e : variance){
-                e<0 ? e = 0 : e=sqrt(e) * t_networkSize;
-            }
-            CSV::write(rootPath + "orderParameterVariance/"+file, variance);
-        }
-        fileList = findTargetFileNameList(rootPath + "orderParameterVariance_trial/");
-        for (auto file : fileList){
-            std::vector<double> variance;
-            CSV::read(rootPath + "orderParameterVariance_trial/"+file, variance);
-            for (auto& e : variance){
-                e<0 ? e = 0 : e=sqrt(e) * t_networkSize;
-            }
-            CSV::write(rootPath + "orderParameterVariance_trial/"+file, variance);
-        }
-        fileList = findTargetFileNameList(rootPath + "orderParameterVariance/average/");
-        for (auto file : fileList){
-            std::vector<double> variance;
-            CSV::read(rootPath + "orderParameterVariance/average/"+file, variance);
-            variance = elementPow(variance, 0.5) * t_networkSize;
-            CSV::write(rootPath + "orderParameterVariance/average/"+file, variance);
-        }
-        fileList = findTargetFileNameList(rootPath + "orderParameterVariance_trial/average/");
-        for (auto file : fileList){
-            std::vector<double> variance;
-            CSV::read(rootPath + "orderParameterVariance_trial/average/"+file, variance);
-            variance = elementPow(variance, 0.5) * t_networkSize;
-            CSV::write(rootPath + "orderParameterVariance_trial/average/"+file, variance);
-        }
-    }
+    // void temporary_variance(const int& t_networkSize, const double& t_acceptanceThreshold){
+    //     std::vector<std::string> fileList;
+    //     fileList = findTargetFileNameList(rootPath + "orderParameterVariance/");
+    //     for (auto file : fileList){
+    //         std::vector<double> variance;
+    //         CSV::read(rootPath + "orderParameterVariance/"+file, variance);
+    //         for (auto& e : variance){
+    //             e<0 ? e = 0 : e = pow(e/t_networkSize, 2.0);
+    //         }
+    //         CSV::write(rootPath + "orderParameterVariance/"+file, variance);
+    //     }
+    //     fileList = findTargetFileNameList(rootPath + "orderParameterVariance_trial/");
+    //     for (auto file : fileList){
+    //         std::vector<double> variance;
+    //         CSV::read(rootPath + "orderParameterVariance_trial/"+file, variance);
+    //         for (auto& e : variance){
+    //             e<0 ? e = 0 : e = pow(e/t_networkSize, 2.0);
+    //         }
+    //         CSV::write(rootPath + "orderParameterVariance_trial/"+file, variance);
+    //     }
+    //     fileList = findTargetFileNameList(rootPath + "orderParameterVariance/average/");
+    //     for (auto file : fileList){
+    //         std::vector<double> variance;
+    //         CSV::read(rootPath + "orderParameterVariance/average/"+file, variance);
+    //         variance = elementPow(variance/t_networkSize, 2.0);
+    //         CSV::write(rootPath + "orderParameterVariance/average/"+file, variance);
+    //     }
+    //     fileList = findTargetFileNameList(rootPath + "orderParameterVariance_trial/average/");
+    //     for (auto file : fileList){
+    //         std::vector<double> variance;
+    //         CSV::read(rootPath + "orderParameterVariance_trial/average/"+file, variance);
+    //         variance = elementPow(variance/t_networkSize, 2.0);
+    //         CSV::write(rootPath + "orderParameterVariance_trial/average/"+file, variance);
+    //     }
+    // }
 
     // //! average process
     // //* t_c : only for type check
