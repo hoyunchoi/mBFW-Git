@@ -27,7 +27,7 @@ namespace mBFW::generate{
     int coreNum;
     int randomEngineSeed;
     double precision;
-    
+
     int maxTime;
     int maxTrialTime;
 

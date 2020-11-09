@@ -25,8 +25,6 @@ int main(int argc, char *argv[]){
     auto start = std::chrono::system_clock::now();
     mBFW::data::setParameters(networkSize, acceptanceThreshold, logBinDelta, deletion);
     mBFW::data::process(checkList);
-    // mBFW::data::temporary_variance(networkSize, acceptanceThreshold);
-    // mBFW::data::temporary_inflecton();
     std::chrono::duration<double> sec = std::chrono::system_clock::now()-start;
     printf("%.6f second to process data\n", sec.count());
 

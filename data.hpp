@@ -6,13 +6,13 @@
 #include <cmath>
 #include <iomanip>
 #include <algorithm>
+#include <set>
 #include <cstdio>
 #include <filesystem>
 
 #include "../library-Git/CSV.hpp"
 #include "../library-Git/linearAlgebra.hpp"
 
-#include "parameters.hpp"
 #include "fileName.hpp"
 
 namespace mBFW::data{
@@ -335,75 +335,75 @@ namespace mBFW::data{
         }
     }
 
-    const int temporary_Nstr(const std::string N_str){
-        if (N_str == "1.0e+04"){
-            return 10000;
-        }
-        else if (N_str == "2.0e+04"){
-            return 20000;
-        }
-        else if (N_str == "2.0e+04"){
-            return 20000;
-        }
-        else if (N_str == "4.0e+04"){
-            return 40000;
-        }
-        else if (N_str == "8.0e+04"){
-            return 80000;
-        }
-        else if (N_str == "1.6e+05"){
-            return 160000;
-        }
-        else if (N_str == "3.2e+05"){
-            return 320000;
-        }
-        else if (N_str == "6.4e+05"){
-            return 640000;
-        }
-        else if (N_str == "1.3e+06"){
-            return 1280000;
-        }
-        else if (N_str == "2.6e+06"){
-            return 2560000;
-        }
-        else if (N_str == "5.1e+06"){
-            return 5120000;
-        }
-        else if (N_str == "1.0e+07"){
-            return 10240000;
-        }
-        else{
-            std::cout<<"check N_str\n";
-            return 0;
-        }
-    }
-    void temporary_inflecton(){
-        std::ofstream writeFile;
-        const std::string directory = rootPath + "orderParameter/";
-        std::ifstream file(directory + "inflection.txt");
-        std::string currentString;
-        writeFile.open(rootPath + "orderParameter/inflection1.txt", std::ios_base::app);
-        while (getline(file, currentString)){
-            const int N = temporary_Nstr(currentString.substr(currentString.find("N")+1, 7));
-            const double G = std::stod(currentString.substr(currentString.find("G")+1, 3));
-            const std::string inflection = currentString.substr(currentString.find("(")+1, currentString.find(")")-currentString.find("(")-1);
-            const double inflection_time = std::stod(inflection.substr(0,inflection.find(",")));
-            const double inflection_op = std::stod(inflection.substr(inflection.find(",")+2));
-            const double t_a = std::stod(currentString.substr(currentString.find("t_a")+5));
+    // const int temporary_Nstr(const std::string N_str){
+    //     if (N_str == "1.0e+04"){
+    //         return 10000;
+    //     }
+    //     else if (N_str == "2.0e+04"){
+    //         return 20000;
+    //     }
+    //     else if (N_str == "2.0e+04"){
+    //         return 20000;
+    //     }
+    //     else if (N_str == "4.0e+04"){
+    //         return 40000;
+    //     }
+    //     else if (N_str == "8.0e+04"){
+    //         return 80000;
+    //     }
+    //     else if (N_str == "1.6e+05"){
+    //         return 160000;
+    //     }
+    //     else if (N_str == "3.2e+05"){
+    //         return 320000;
+    //     }
+    //     else if (N_str == "6.4e+05"){
+    //         return 640000;
+    //     }
+    //     else if (N_str == "1.3e+06"){
+    //         return 1280000;
+    //     }
+    //     else if (N_str == "2.6e+06"){
+    //         return 2560000;
+    //     }
+    //     else if (N_str == "5.1e+06"){
+    //         return 5120000;
+    //     }
+    //     else if (N_str == "1.0e+07"){
+    //         return 10240000;
+    //     }
+    //     else{
+    //         std::cout<<"check N_str\n";
+    //         return 0;
+    //     }
+    // }
+    // void temporary_inflecton(){
+    //     std::ofstream writeFile;
+    //     const std::string directory = rootPath + "orderParameter/";
+    //     std::ifstream file(directory + "inflection.txt");
+    //     std::string currentString;
+    //     writeFile.open(rootPath + "orderParameter/inflection1.txt", std::ios_base::app);
+    //     while (getline(file, currentString)){
+    //         const int N = temporary_Nstr(currentString.substr(currentString.find("N")+1, 7));
+    //         const double G = std::stod(currentString.substr(currentString.find("G")+1, 3));
+    //         const std::string inflection = currentString.substr(currentString.find("(")+1, currentString.find(")")-currentString.find("(")-1);
+    //         const double inflection_time = std::stod(inflection.substr(0,inflection.find(",")));
+    //         const double inflection_op = std::stod(inflection.substr(inflection.find(",")+2));
+    //         const double t_a = std::stod(currentString.substr(currentString.find("t_a")+5));
 
-            const std::vector<std::string> targetFileNameList = findTargetFileNameList(directory+"average/", fileName::base(N, G));
-            if (targetFileNameList.size()!=1){
-                std::cout<<"check N:"<< N <<", G:"<<G <<"\n";
-            }
-            std::vector<double> op;
-            CSV::read(directory+"average/" + targetFileNameList[0], op);
-            const int l_a = t_a*N;
-            const double m_a = op[l_a];
+    //         const std::vector<std::string> targetFileNameList = findTargetFileNameList(directory+"average/", fileName::base(N, G));
+    //         if (targetFileNameList.size()!=1){
+    //             std::cout<<"check N:"<< N <<", G:"<<G <<"\n";
+    //         }
+    //         std::vector<double> op;
+    //         CSV::read(directory+"average/" + targetFileNameList[0], op);
+    //         const int l_a = t_a*N;
+    //         const double m_a = op[l_a];
 
-            writeFile << fileName::base(N, G) << "\tinflection: " << std::setprecision(15) << inflection_time << "," << inflection_op << "\tt_a:" << t_a << ", m_a:" << m_a <<"\n";
-        }
-        writeFile.close();
-    }
+    //         writeFile << fileName::base(N, G) << "\tinflection: " << std::setprecision(15) << inflection_time << "," << inflection_op << "\tt_a:" << t_a << ", m_a:" << m_a <<"\n";
+    //     }
+    //     writeFile.close();
+    // }
 
 
     // void temporary_variance(const int& t_networkSize, const double& t_acceptanceThreshold){
