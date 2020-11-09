@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import glob
+from decimal import Decimal
 
 relativePathList = {}
 relativePathList["clusterSizeDist"] = "/logBin/"
@@ -56,9 +57,25 @@ def read(t_observable, t_networkSize, t_acceptanceThreshold, t_reapeater=None):
 
     #* Check found files
     if (len(file) != 1):
-        print("There is problem at reading " + t_observable + " at N=" + t_networkSize + ", G=" + t_acceptanceThreshold)
+        print("There is problem at reading " + t_observable + " at N={:.1e}".format(t_networkSize) + ", G={:.1f}".format(t_acceptanceThreshold))
         return
     return readCSV(file[0])
+
+#* Read Inflection
+def readInflection(t_networkSize, t_acceptanceThreshold):
+    fileName = rootPath + "orderParameter/inflection.txt"
+    target = "N{:.1e},G{:.1f}".format(t_networkSize, t_acceptanceThreshold)
+    with open(fileName) as file:
+        content = file.readlines()
+        for line in content:
+            if target in line:
+                line = line[line.find("inflection: ")+12 : ]
+                inflectionTime = line[:line.find(",")]
+                inflectionOP = line[line.find(",")+1 : line.find("\t")]
+                line = line[line.find("\t") : ]
+                t_a = line[line.find("t_a:")+4 : line.find(",")]
+    return Decimal(inflectionTime), Decimal(inflectionOP), Decimal(t_a)
+
 
 if __name__=="__main__":
     print("This is a module readData.py")
