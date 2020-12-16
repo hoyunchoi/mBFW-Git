@@ -8,7 +8,10 @@
 
 #include "fileName.hpp"
 
+#include "../library-Git/linearAlgebra.hpp"
+
 namespace mBFW::parameters{
+    using namespace linearAlgebra;
     const std::string rootPath = "../data/mBFW_hybrid/";
 
     //* Set parameter for orderParameter_clusterSizeDist
@@ -25,6 +28,15 @@ namespace mBFW::parameters{
         }
         else if (t_acceptanceThreshold == 0.5){
             orderParameter_clusterSizeDist = {0.01, 0.05, 0.1, 0.15, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.81, 0.82, 0.83, 0.84, 0.85, 0.86, 0.87, 0.88, 0.89, 0.9};
+            if (t_networkSize == 10000 || t_networkSize == 20000){
+                orderParameter_clusterSizeDist = {0.791, 0.792, 0.793, 0.794, 0.795, 0.796, 0.797, 0.798, 0.799, 0.801, 0.802, 0.803, 0.804, 0.805, 0.806, 0.807, 0.808, 0.809};
+            }
+            else if ( t_networkSize == 40000 ){
+                orderParameter_clusterSizeDist = {0.801, 0.802, 0.803, 0.804, 0.805, 0.806, 0.807, 0.808, 0.809, 0.811, 0.812, 0.813, 0.814, 0.815, 0.816, 0.817, 0.818, 0.819};
+            }
+            else{
+                orderParameter_clusterSizeDist = {0.811, 0.812, 0.813, 0.814, 0.815, 0.816, 0.817, 0.818, 0.819, 0.821, 0.822, 0.823, 0.824, 0.825, 0.826, 0.827, 0.828, 0.829};
+            }
         }
         else if (t_acceptanceThreshold == 0.6){
             orderParameter_clusterSizeDist = {0.01, 0.05, 0.1, 0.15, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.72, 0.74, 0.76, 0.78, 0.8, 0.82, 0.84, 0.9};
