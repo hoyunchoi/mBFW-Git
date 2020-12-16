@@ -80,6 +80,10 @@ def readt_a(t_networkSize, t_acceptanceThreshold):
 def readt_c(t_networkSize, t_acceptanceThreshold):
     fileName = rootPath + "t_c.txt"
     target = "N{:.1e},G{:.1f}".format(t_networkSize, t_acceptanceThreshold)
+    t_c_var = 0
+    m_c_var = 0
+    t_c_mcs = 0
+    m_c_mcs = 0
 
     with open(fileName) as file:
         content = file.readlines()

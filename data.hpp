@@ -170,9 +170,8 @@ namespace mBFW::data{
 
         //* Write averaged file into base diretory
         CSV::write(baseDirectory + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize, 0), average);
-
         //* Trim averaged data
-        average.erase(std::remove_if(average.begin(), average.end(), [](const auto& value){return std::isnan(value) || value==0;}), average.end());
+        average.erase(std::remove_if(average.end()-average.size()/10, average.end(), [](const auto& value){return std::isnan(value) || value==0;}), average.end());
         for (auto& e : average){
             if (e<0){
                 e = 0;

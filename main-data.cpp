@@ -11,15 +11,15 @@ int main(int argc, char *argv[]){
 
     //* Check list of each observables
     std::map<std::string, bool> checkList;
-    checkList["orderParameter"] = true;
-    checkList["orderParameter_trial"] = true;
-    checkList["meanClusterSize"] = true;
-    checkList["meanClusterSize_trial"] = true;
+    checkList["orderParameter"] = false;
+    checkList["orderParameter_trial"] = false;
+    checkList["meanClusterSize"] = false;
+    checkList["meanClusterSize_trial"] = false;
     checkList["orderParameterVariance"] = true;
     checkList["orderParameterVariance_trial"] = true;
-    checkList["clusterSizeDist"] = true;
-    checkList["clusterSizeDist_exact"] = true;
-    checkList["clusterSizeDist_time"] = true;
+    checkList["clusterSizeDist"] = false;
+    checkList["clusterSizeDist_exact"] = false;
+    checkList["clusterSizeDist_time"] = false;
 
     //* Run data process
     auto start = std::chrono::system_clock::now();

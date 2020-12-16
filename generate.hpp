@@ -215,30 +215,30 @@ namespace mBFW::generate{
                     secondMoment_trial[trialTime] += std::pow(currentOrderParameter, 2.0);
 
                     //! Mean Cluster Size
-                    meanClusterSize[time] += model.getMeanClusterSize();
-                    meanClusterSize_trial[trialTime] += model.getMeanClusterSize();
+                    // meanClusterSize[time] += model.getMeanClusterSize();
+                    // meanClusterSize_trial[trialTime] += model.getMeanClusterSize();
 
                     //! Cluster Size Distribution time
-                    auto it = std::find(time_clusterSizeDist.begin(), time_clusterSizeDist.end(), (double)time/networkSize);
-                    if (it != time_clusterSizeDist.end()){
-                        const std::map<int, int> sortedCluster = model.getSortedCluster();
-                        for (auto it2 = sortedCluster.begin(); it2 != sortedCluster.end(); ++it2){
-                            clusterSizeDist_time[*it][it2->first] += it2->second;
-                        }
-                    }
+                    // auto it = std::find(time_clusterSizeDist.begin(), time_clusterSizeDist.end(), (double)time/networkSize);
+                    // if (it != time_clusterSizeDist.end()){
+                    //     const std::map<int, int> sortedCluster = model.getSortedCluster();
+                    //     for (auto it2 = sortedCluster.begin(); it2 != sortedCluster.end(); ++it2){
+                    //         clusterSizeDist_time[*it][it2->first] += it2->second;
+                    //     }
+                    // }
 
                     //! Order Parameter Distribution
-                    it = std::find(time_orderParameterDist.begin(), time_orderParameterDist.end(), (double)time/networkSize);
-                    if (it != time_orderParameterDist.end()){
-                        ++orderParameterDist[*it][currentOrderParameter];
-                    }
+                    // it = std::find(time_orderParameterDist.begin(), time_orderParameterDist.end(), (double)time/networkSize);
+                    // if (it != time_orderParameterDist.end()){
+                    //     ++orderParameterDist[*it][currentOrderParameter];
+                    // }
 
                     //! Age Distribution time(op)
-                    const std::vector<std::pair<int, int>> changedAge = model.getChangedAge();
-                    for (const auto& age : changedAge){
-                        ageDist_time[currentState_time][age.first] += age.second;
-                        ageDist_op[currentState_op][age.first] += age.second;
-                    }
+                    // const std::vector<std::pair<int, int>> changedAge = model.getChangedAge();
+                    // for (const auto& age : changedAge){
+                    //     ageDist_time[currentState_time][age.first] += age.second;
+                    //     ageDist_op[currentState_op][age.first] += age.second;
+                    // }
 
 
                     //* Order Parameter of network is changed <=> upper bound is changed
@@ -255,32 +255,32 @@ namespace mBFW::generate{
                         }
 
                         //! Cluster Size Distribution
-                        findingClusterSizeDist = newFindingClusterSizeDist;
-                        for (const double& op : findingClusterSizeDist){
-                            if (op < currentOrderParameter){
-                                const std::map<int, int> sortedCluster = model.getSortedCluster();
-                                for (auto it2 = sortedCluster.begin(); it2 != sortedCluster.end(); ++it2){
-                                    clusterSizeDist[op][it2->first] += it2->second;
-                                }
-                                newFindingClusterSizeDist.erase(op);
-                            }
-                        }
+                        // findingClusterSizeDist = newFindingClusterSizeDist;
+                        // for (const double& op : findingClusterSizeDist){
+                        //     if (op < currentOrderParameter){
+                        //         const std::map<int, int> sortedCluster = model.getSortedCluster();
+                        //         for (auto it2 = sortedCluster.begin(); it2 != sortedCluster.end(); ++it2){
+                        //             clusterSizeDist[op][it2->first] += it2->second;
+                        //         }
+                        //         newFindingClusterSizeDist.erase(op);
+                        //     }
+                        // }
 
                         //! Cluster Size Distribution Exact
-                        const double roundedOrderParameter = round(currentOrderParameter*precision)/precision;
-                        auto it = std::find(orderParameter_clusterSizeDist.begin(), orderParameter_clusterSizeDist.end(), roundedOrderParameter);
-                        if (it != orderParameter_clusterSizeDist.end()){
-                            const std::map<int, int> sortedCluster = model.getSortedCluster();
-                            for (auto it2 = sortedCluster.begin(); it2 != sortedCluster.end(); ++it2){
-                                clusterSizeDist_exact[*it][it2->first] += it2 -> second;
-                            }
-                        }
+                        // const double roundedOrderParameter = round(currentOrderParameter*precision)/precision;
+                        // auto it = std::find(orderParameter_clusterSizeDist.begin(), orderParameter_clusterSizeDist.end(), roundedOrderParameter);
+                        // if (it != orderParameter_clusterSizeDist.end()){
+                        //     const std::map<int, int> sortedCluster = model.getSortedCluster();
+                        //     for (auto it2 = sortedCluster.begin(); it2 != sortedCluster.end(); ++it2){
+                        //         clusterSizeDist_exact[*it][it2->first] += it2 -> second;
+                        //     }
+                        // }
 
                         //! Inter Event Time Time
-                        ++interEventTimeDist_time[currentState_time][time-eventTime];
+                        // ++interEventTimeDist_time[currentState_time][time-eventTime];
 
                         //! Inter Event Time Order Parameter
-                        ++interEventTimeDist_op[currentState_op][time-eventTime];
+                        // ++interEventTimeDist_op[currentState_op][time-eventTime];
 
                         //* Initialize variable for new period
                         eventTime = time;
@@ -306,7 +306,7 @@ namespace mBFW::generate{
                     secondMoment_trial[trialTime] += std::pow(currentOrderParameter, 2.0);
 
                     //! Trial Mean Cluster Size
-                    meanClusterSize_trial[trialTime] += model.getMeanClusterSize();
+                    // meanClusterSize_trial[trialTime] += model.getMeanClusterSize();
                 }//* End of rejecting link
                 //* End of one step
             }//* End of network growing (one ensemble)
@@ -320,22 +320,22 @@ namespace mBFW::generate{
 
         //! Average and Save Order Parameter
         {
-            orderParameter /= ensembleSize;
-            const std::string orderParameterPath = rootPath + "orderParameter/";
-            if (!fs::exists(orderParameterPath)){
-                fs::create_directories(orderParameterPath);
-            }
-            CSV::write(orderParameterPath + fileName::NGE(networkSize, acceptanceThreshold, ensembleSize, coreNum), orderParameter);
+            // orderParameter /= ensembleSize;
+            // const std::string orderParameterPath = rootPath + "orderParameter/";
+            // if (!fs::exists(orderParameterPath)){
+            //     fs::create_directories(orderParameterPath);
+            // }
+            // CSV::write(orderParameterPath + fileName::NGE(networkSize, acceptanceThreshold, ensembleSize, coreNum), orderParameter);
         }
 
         //! Average and Save Trial Order Parameter
         {
-            orderParameter_trial /= ensembleSize;
-            const std::string orderParameter_trialPath = rootPath + "orderParameter_trial/";
-            if (!fs::exists(orderParameter_trialPath)){
-                fs::create_directories(orderParameter_trialPath);
-            }
-            CSV::write(orderParameter_trialPath + fileName::NGE(networkSize, acceptanceThreshold, ensembleSize, coreNum), orderParameter_trial);
+            // orderParameter_trial /= ensembleSize;
+            // const std::string orderParameter_trialPath = rootPath + "orderParameter_trial/";
+            // if (!fs::exists(orderParameter_trialPath)){
+            //     fs::create_directories(orderParameter_trialPath);
+            // }
+            // CSV::write(orderParameter_trialPath + fileName::NGE(networkSize, acceptanceThreshold, ensembleSize, coreNum), orderParameter_trial);
         }
 
         //! Average and Save Order Parameter Variance
@@ -370,146 +370,146 @@ namespace mBFW::generate{
 
         //! Average and Save Mean Cluster Size
         {
-            meanClusterSize /= ensembleSize;
-            const std::string meanClusterSizePath = rootPath + "meanClusterSize/";
-            if (!fs::exists(meanClusterSizePath)){
-                fs::create_directories(meanClusterSizePath);
-            }
-            CSV::write(meanClusterSizePath + fileName::NGE(networkSize, acceptanceThreshold, ensembleSize, coreNum), meanClusterSize);
+            // meanClusterSize /= ensembleSize;
+            // const std::string meanClusterSizePath = rootPath + "meanClusterSize/";
+            // if (!fs::exists(meanClusterSizePath)){
+            //     fs::create_directories(meanClusterSizePath);
+            // }
+            // CSV::write(meanClusterSizePath + fileName::NGE(networkSize, acceptanceThreshold, ensembleSize, coreNum), meanClusterSize);
         }
 
         //! Average and Save Trial Mean Cluster Size
         {
-            meanClusterSize_trial /= ensembleSize;
-            const std::string meanClusterSize_trialPath = rootPath + "meanClusterSize_trial/";
-            if (!fs::exists(meanClusterSize_trialPath)){
-                fs::create_directories(meanClusterSize_trialPath);
-            }
-            CSV::write(meanClusterSize_trialPath + fileName::NGE(networkSize, acceptanceThreshold, ensembleSize, coreNum), meanClusterSize_trial);
+            // meanClusterSize_trial /= ensembleSize;
+            // const std::string meanClusterSize_trialPath = rootPath + "meanClusterSize_trial/";
+            // if (!fs::exists(meanClusterSize_trialPath)){
+            //     fs::create_directories(meanClusterSize_trialPath);
+            // }
+            // CSV::write(meanClusterSize_trialPath + fileName::NGE(networkSize, acceptanceThreshold, ensembleSize, coreNum), meanClusterSize_trial);
         }
 
         //! Order Parameter Distribution
         {
-            const std::string orderParameterDistPath = rootPath + "orderParameterDist/";
-            if(!fs::exists(orderParameterDistPath)){
-                fs::create_directories(orderParameterDistPath);
-            }
-            for (const double& t : time_orderParameterDist){
-                const int tot = std::accumulate(orderParameterDist[t].begin(), orderParameterDist[t].end(), 0);
-                std::map<double, double> trimmed;
-                for (int op=0; op<networkSize; ++op){
-                    if (orderParameterDist[t][op]){
-                        trimmed[(double)op/networkSize] = (double)orderParameterDist[t][op] / tot;
-                    }
-                }
-                CSV::write(orderParameterDistPath + fileName::NGET(networkSize, acceptanceThreshold, ensembleSize, t), trimmed);
-            }
+            // const std::string orderParameterDistPath = rootPath + "orderParameterDist/";
+            // if(!fs::exists(orderParameterDistPath)){
+            //     fs::create_directories(orderParameterDistPath);
+            // }
+            // for (const double& t : time_orderParameterDist){
+            //     const int tot = std::accumulate(orderParameterDist[t].begin(), orderParameterDist[t].end(), 0);
+            //     std::map<double, double> trimmed;
+            //     for (int op=0; op<networkSize; ++op){
+            //         if (orderParameterDist[t][op]){
+            //             trimmed[(double)op/networkSize] = (double)orderParameterDist[t][op] / tot;
+            //         }
+            //     }
+            //     CSV::write(orderParameterDistPath + fileName::NGET(networkSize, acceptanceThreshold, ensembleSize, t), trimmed);
+            // }
         }
 
         //! Cluster Size Distribution
         {
-            const std::string clusterSizeDistPath = rootPath + "clusterSizeDist/";
-            if (!fs::exists(clusterSizeDistPath)){
-                fs::create_directories(clusterSizeDistPath);
-            }
-            for (const double& op : orderParameter_clusterSizeDist){
-                std::map<int, double> trimmed;
-                const long long total = std::accumulate(clusterSizeDist[op].begin(),clusterSizeDist[op].end(), 0);
-                for (int cs=0; cs<networkSize; ++cs){
-                    if (clusterSizeDist[op][cs]){
-                        trimmed[cs] = (double)clusterSizeDist[op][cs]/total;
-                    }
-                }
-                CSV::write(clusterSizeDistPath + fileName::NGEOP(networkSize, acceptanceThreshold, ensembleSize, op, coreNum), trimmed);
-            }
+            // const std::string clusterSizeDistPath = rootPath + "clusterSizeDist/";
+            // if (!fs::exists(clusterSizeDistPath)){
+            //     fs::create_directories(clusterSizeDistPath);
+            // }
+            // for (const double& op : orderParameter_clusterSizeDist){
+            //     std::map<int, double> trimmed;
+            //     const long long total = std::accumulate(clusterSizeDist[op].begin(),clusterSizeDist[op].end(), 0);
+            //     for (int cs=0; cs<networkSize; ++cs){
+            //         if (clusterSizeDist[op][cs]){
+            //             trimmed[cs] = (double)clusterSizeDist[op][cs]/total;
+            //         }
+            //     }
+            //     CSV::write(clusterSizeDistPath + fileName::NGEOP(networkSize, acceptanceThreshold, ensembleSize, op, coreNum), trimmed);
+            // }
         }
 
         //! Cluster Size Distribution Exact
         {
-            const std::string clusterSizeDist_exactPath = rootPath + "clusterSizeDist_exact/";
-            if (!fs::exists(clusterSizeDist_exactPath)){
-                fs::create_directories(clusterSizeDist_exactPath);
-            }
-            for (const double& op : orderParameter_clusterSizeDist){
-                std::map<int, double> trimmed;
-                const long long total = std::accumulate(clusterSizeDist_exact[op].begin(),clusterSizeDist_exact[op].end(), 0);
-                for (int cs=0; cs<networkSize; ++cs){
-                    if (clusterSizeDist_exact[op][cs]){
-                        trimmed[cs] = (double)clusterSizeDist_exact[op][cs]/total;
-                    }
-                }
-                CSV::write(clusterSizeDist_exactPath + fileName::NGEOP(networkSize, acceptanceThreshold, ensembleSize, op, coreNum), trimmed);
-            }
+            // const std::string clusterSizeDist_exactPath = rootPath + "clusterSizeDist_exact/";
+            // if (!fs::exists(clusterSizeDist_exactPath)){
+            //     fs::create_directories(clusterSizeDist_exactPath);
+            // }
+            // for (const double& op : orderParameter_clusterSizeDist){
+            //     std::map<int, double> trimmed;
+            //     const long long total = std::accumulate(clusterSizeDist_exact[op].begin(),clusterSizeDist_exact[op].end(), 0);
+            //     for (int cs=0; cs<networkSize; ++cs){
+            //         if (clusterSizeDist_exact[op][cs]){
+            //             trimmed[cs] = (double)clusterSizeDist_exact[op][cs]/total;
+            //         }
+            //     }
+            //     CSV::write(clusterSizeDist_exactPath + fileName::NGEOP(networkSize, acceptanceThreshold, ensembleSize, op, coreNum), trimmed);
+            // }
         }
 
         //! Cluster Size Distribution Time
         {
-            const std::string clusterSizeDist_timePath = rootPath + "clusterSizeDist_time/";
-            if (!fs::exists(clusterSizeDist_timePath)){
-                fs::create_directories(clusterSizeDist_timePath);
-            }
-            for (const double& t : time_clusterSizeDist){
-                std::map<int, double> trimmed;
-                const long long total = std::accumulate(clusterSizeDist_time[t].begin(), clusterSizeDist_time[t].end(), 0);
-                for (int cs=0; cs<networkSize; ++cs){
-                    if (clusterSizeDist_time[t][cs]){
-                        trimmed[cs] = (double)clusterSizeDist_time[t][cs]/total;
-                    }
-                }
-                CSV::write(clusterSizeDist_timePath + fileName::NGET(networkSize, acceptanceThreshold, ensembleSize, t, coreNum), trimmed);
-            }
+            // const std::string clusterSizeDist_timePath = rootPath + "clusterSizeDist_time/";
+            // if (!fs::exists(clusterSizeDist_timePath)){
+            //     fs::create_directories(clusterSizeDist_timePath);
+            // }
+            // for (const double& t : time_clusterSizeDist){
+            //     std::map<int, double> trimmed;
+            //     const long long total = std::accumulate(clusterSizeDist_time[t].begin(), clusterSizeDist_time[t].end(), 0);
+            //     for (int cs=0; cs<networkSize; ++cs){
+            //         if (clusterSizeDist_time[t][cs]){
+            //             trimmed[cs] = (double)clusterSizeDist_time[t][cs]/total;
+            //         }
+            //     }
+            //     CSV::write(clusterSizeDist_timePath + fileName::NGET(networkSize, acceptanceThreshold, ensembleSize, t, coreNum), trimmed);
+            // }
         }
 
         //! Inter Event Time Distribution time(op)
         {
-            for (auto state : states){
-                const std::string interEventTimeDist_timePath = rootPath + "interEventTimeDist_time/" + state + "/";
-                const std::string interEventTimeDist_opPath = rootPath + "interEventTimeDist_op/" + state + "/";
-                if (!fs::exists(interEventTimeDist_timePath)){
-                    fs::create_directories(interEventTimeDist_timePath);
-                }
-                if (!fs::exists(interEventTimeDist_opPath)){
-                    fs::create_directories(interEventTimeDist_opPath);
-                }
-                std::map<int, double> trimmed_time, trimmed_op;
-                const double tot_time = std::accumulate(interEventTimeDist_time[state].begin(), interEventTimeDist_time[state].end(), 0.0);
-                const double tot_op = std::accumulate(interEventTimeDist_op[state].begin(), interEventTimeDist_op[state].end(), 0.0);
-                for (int iet=0; iet<networkSize; ++iet){
-                    if (interEventTimeDist_time[state][iet]){
-                        trimmed_time[iet] = interEventTimeDist_time[state][iet] / tot_time;
-                    }
-                    if (interEventTimeDist_op[state][iet]){
-                        trimmed_op[iet] = interEventTimeDist_op[state][iet] / tot_op;
-                    }
-                }
-                CSV::write(interEventTimeDist_timePath + fileName::NGE(networkSize, acceptanceThreshold, ensembleSize, coreNum), trimmed_time);
-                CSV::write(interEventTimeDist_opPath + fileName::NGE(networkSize, acceptanceThreshold, ensembleSize, coreNum), trimmed_op);
-            }
+            // for (auto state : states){
+            //     const std::string interEventTimeDist_timePath = rootPath + "interEventTimeDist_time/" + state + "/";
+            //     const std::string interEventTimeDist_opPath = rootPath + "interEventTimeDist_op/" + state + "/";
+            //     if (!fs::exists(interEventTimeDist_timePath)){
+            //         fs::create_directories(interEventTimeDist_timePath);
+            //     }
+            //     if (!fs::exists(interEventTimeDist_opPath)){
+            //         fs::create_directories(interEventTimeDist_opPath);
+            //     }
+            //     std::map<int, double> trimmed_time, trimmed_op;
+            //     const double tot_time = std::accumulate(interEventTimeDist_time[state].begin(), interEventTimeDist_time[state].end(), 0.0);
+            //     const double tot_op = std::accumulate(interEventTimeDist_op[state].begin(), interEventTimeDist_op[state].end(), 0.0);
+            //     for (int iet=0; iet<networkSize; ++iet){
+            //         if (interEventTimeDist_time[state][iet]){
+            //             trimmed_time[iet] = interEventTimeDist_time[state][iet] / tot_time;
+            //         }
+            //         if (interEventTimeDist_op[state][iet]){
+            //             trimmed_op[iet] = interEventTimeDist_op[state][iet] / tot_op;
+            //         }
+            //     }
+            //     CSV::write(interEventTimeDist_timePath + fileName::NGE(networkSize, acceptanceThreshold, ensembleSize, coreNum), trimmed_time);
+            //     CSV::write(interEventTimeDist_opPath + fileName::NGE(networkSize, acceptanceThreshold, ensembleSize, coreNum), trimmed_op);
+            // }
         }
 
         //! Age Distribution time(op)
         {
-            for (const auto& state : states){
-                const std::string ageDist_timePath = rootPath + "ageDist_time/" + state + "/";
-                const std::string ageDist_opPath = rootPath + "ageDist_op/" + state + "/";
-                if (!fs::exists(ageDist_timePath)){
-                    fs::create_directories(ageDist_timePath);
-                }
-                if (!fs::exists(ageDist_opPath)){
-                    fs::create_directories(ageDist_opPath);
-                }
-                std::map<int, double> trimmed_time, trimmed_op;
-                const double tot_time = std::accumulate(ageDist_time[state].begin(), ageDist_time[state].end(), 0.0);
-                const double tot_op = std::accumulate(ageDist_op[state].begin(), ageDist_op[state].end(), 0.0);
-                for (int age=0; age<networkSize; ++age){
-                    if (ageDist_time[state][age]){
-                        trimmed_time[age] = ageDist_time[state][age] / tot_time;
-                        trimmed_op[age] = ageDist_op[state][age] / tot_op;
-                    }
-                }
-                CSV::write(ageDist_timePath + fileName::NGE(networkSize, acceptanceThreshold, ensembleSize, coreNum), trimmed_time);
-                CSV::write(ageDist_opPath + fileName::NGE(networkSize, acceptanceThreshold, ensembleSize, coreNum), trimmed_op);
-            }
+            // for (const auto& state : states){
+            //     const std::string ageDist_timePath = rootPath + "ageDist_time/" + state + "/";
+            //     const std::string ageDist_opPath = rootPath + "ageDist_op/" + state + "/";
+            //     if (!fs::exists(ageDist_timePath)){
+            //         fs::create_directories(ageDist_timePath);
+            //     }
+            //     if (!fs::exists(ageDist_opPath)){
+            //         fs::create_directories(ageDist_opPath);
+            //     }
+            //     std::map<int, double> trimmed_time, trimmed_op;
+            //     const double tot_time = std::accumulate(ageDist_time[state].begin(), ageDist_time[state].end(), 0.0);
+            //     const double tot_op = std::accumulate(ageDist_op[state].begin(), ageDist_op[state].end(), 0.0);
+            //     for (int age=0; age<networkSize; ++age){
+            //         if (ageDist_time[state][age]){
+            //             trimmed_time[age] = ageDist_time[state][age] / tot_time;
+            //             trimmed_op[age] = ageDist_op[state][age] / tot_op;
+            //         }
+            //     }
+            //     CSV::write(ageDist_timePath + fileName::NGE(networkSize, acceptanceThreshold, ensembleSize, coreNum), trimmed_time);
+            //     CSV::write(ageDist_opPath + fileName::NGE(networkSize, acceptanceThreshold, ensembleSize, coreNum), trimmed_op);
+            // }
         }
 
     }//* End of function mBFW::generate::save
