@@ -295,9 +295,9 @@ namespace mBFW::data{
         const double t_a = (double)l_a/networkSize;
         const double m_a = smoothedOrderParameter[l_a];
 
-        //* Print at orderParameter/inflection.txt
+        //* Print at t_a.txt
         std::ofstream writeFile;
-        writeFile.open(rootPath + "orderParameter/inflection.txt", std::ios_base::app);
+        writeFile.open(rootPath + "t_a.txt", std::ios_base::app);
         writeFile << fileName::base(networkSize, acceptanceThreshold) << "\tinflection: " << std::setprecision(15) << inflectionPoint[0] << "," << inflectionPoint[1] << "\tt_a:" << t_a << ", m_a:" << m_a <<"\n";
         writeFile.close();
     }

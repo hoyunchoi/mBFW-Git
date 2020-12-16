@@ -1,7 +1,6 @@
 import numpy as np
 import pandas as pd
 import glob
-from decimal import Decimal
 
 relativePathList = {}
 relativePathList["clusterSizeDist"] = "/logBin/"
@@ -61,9 +60,9 @@ def read(t_observable, t_networkSize, t_acceptanceThreshold, t_reapeater=None):
         return
     return readCSV(file[0])
 
-#* Read Inflection
-def readInflection(t_networkSize, t_acceptanceThreshold):
-    fileName = rootPath + "orderParameter/inflection.txt"
+#* Read t_a
+def readt_a(t_networkSize, t_acceptanceThreshold):
+    fileName = rootPath + "t_a.txt"
     target = "N{:.1e},G{:.1f}".format(t_networkSize, t_acceptanceThreshold)
     with open(fileName) as file:
         content = file.readlines()
@@ -74,8 +73,26 @@ def readInflection(t_networkSize, t_acceptanceThreshold):
                 inflectionOP = line[line.find(",")+1 : line.find("\t")]
                 line = line[line.find("\t") : ]
                 t_a = line[line.find("t_a:")+4 : line.find(",")]
-    return Decimal(inflectionTime), Decimal(inflectionOP), Decimal(t_a)
+                m_a = line[line.find("m_a:")+4 :]
+    return float(inflectionTime), float(inflectionOP), float(t_a), float(m_a)
 
+#* Read t_c
+def readt_c(t_networkSize, t_acceptanceThreshold):
+    fileName = rootPath + "t_c.txt"
+    target = "N{:.1e},G{:.1f}".format(t_networkSize, t_acceptanceThreshold)
+
+    with open(fileName) as file:
+        content = file.readlines()
+        for line in content:
+            if target in line:
+                line = line[line.find("\t"):]
+                if "var" in line:
+                    t_c_var = line[line.find("t_c_var:")+8 : line.find(",")]
+                    m_c_var = line[line.find("m_c:")+4 : -1]
+                elif "mcs" in line:
+                    t_c_mcs = line[line.find("t_c_mcs:")+8 : line.find(",")]
+                    m_c_mcs = line[line.find("m_c:")+4 : -1]
+    return float(t_c_var), float(m_c_var), float(t_c_mcs), float(m_c_mcs)
 
 if __name__=="__main__":
     print("This is a module readData.py")

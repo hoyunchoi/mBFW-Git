@@ -4,6 +4,7 @@
 #include <fstream>
 #include <set>
 #include <vector>
+#include <tuple>
 
 #include "fileName.hpp"
 
@@ -65,7 +66,7 @@ namespace mBFW::parameters{
             time_clusterSizeDist = {0.84, 0.86, 0.88, 0.89, 0.896, 0.898, 0.90, 0.902, 0.904, 0.905, 0.906, 0.908, 0.91, 0.92, 0.94};
         }
         else if (t_acceptanceThreshold == 0.7){
-            time_clusterSizeDist = {0.8, 0.82, 0.83, 0.84, 0.846, 0.848, 0.85, 0.852, 0.854, 0.856, 0.858, 0.86, 0.87,};
+            time_clusterSizeDist = {0.8, 0.82, 0.83, 0.84, 0.846, 0.848, 0.85, 0.852, 0.854, 0.856, 0.858, 0.86, 0.87};
         }
         else if (t_acceptanceThreshold == 0.8){
             time_clusterSizeDist = {0.74, 0.76, 0.78, 0.79, 0.792, 0.794, 0.796, 0.798, 0.80, 0.802, 0.804, 0.806, 0.808, 0.81, 0.83};
@@ -82,13 +83,49 @@ namespace mBFW::parameters{
         return time_clusterSizeDist;
     }
 
-    //* Read t_a,m_a from "orderParameter/inflection.txt" and set t_a,m_a
-    const std::vector<double> set_ta(const int& t_networkSize, const double& t_acceptanceThreshold){
+    //* Set parameter for time_orderParameterDist
+    std::set<double> set_time_orderParameterDist(const int& t_networkSize, const double& t_acceptanceThreshold){
+        std::set<double> time_orderParameterDist;
+        if (t_acceptanceThreshold == 0.2){
+            time_orderParameterDist = {0.991, 0.992, 0.993, 0.9935, 0.994, 0.9945, 0.995, 0.9955, 0.996, 0.9965, 0.997, 0.998, 0.999};
+        }
+        else if (t_acceptanceThreshold == 0.3){
+            time_orderParameterDist = {0.98, 0.9805, 0.981, 0.9815, 0.982, 0.9825, 0.983, 0.9835, 0.984};
+        }
+        else if (t_acceptanceThreshold == 0.4){
+            time_orderParameterDist = {0.961, 0.9615, 0.962, 0.9625, 0.963, 0.9635, 0.964, 0.9645, 0.965, 0.9655, 0.966};
+        }
+        else if (t_acceptanceThreshold == 0.5){
+            time_orderParameterDist = {0.933, 0.9335, 0.934, 0.9345, 0.935, 0.9355, 0.936, 0.9365, 0.937};
+        }
+        else if (t_acceptanceThreshold == 0.6){
+            time_orderParameterDist = {0.897, 0.8975, 0.898, 0.8985, 0.899, 0.8995, 0.900, 0.9005, 0.901};
+        }
+        else if (t_acceptanceThreshold == 0.7){
+            time_orderParameterDist = {0.852, 0.8525, 0.853, 0.8535, 0.854, 0.8545, 0.855, 0.8555, 0.856, 0.8565, 0.857};
+        }
+        else if (t_acceptanceThreshold == 0.8){
+            time_orderParameterDist = {0.795, 0.7955, 0.796, 0.7965, 0.797, 0.7975, 0.798, 0.7985, 0.799, 0.7995, 0.800};
+        }
+        else if (t_acceptanceThreshold == 0.9){
+            time_orderParameterDist = {0.715, 0.7155, 0.716, 0.7165, 0.717, 0.7175, 0.718, 0.7185, 0.719};
+        }
+        else if (t_acceptanceThreshold == 1.0){
+            time_orderParameterDist = {};
+        }
+        else{
+            std::cout << "Not defined acceptance rate\n";
+        }
+        return time_orderParameterDist;
+    }
+
+    //* Read t_a,m_a from "t_a.txt" and set t_a,m_a
+    const std::tuple<double, double> set_discontinousJump(const int& t_networkSize, const double& t_acceptanceThreshold){
         double t_a = 0.0;
         double m_a = 0.0;
-        std::ifstream inflectionFile(rootPath + "orderParameter/inflection.txt");
+        std::ifstream t_aFile(rootPath + "t_a.txt");
         std::string line;
-        while (getline(inflectionFile, line)){
+        while (getline(t_aFile, line)){
             //* Find line for input network size and acceptance threshold
             if (line.find(fileName::base(t_networkSize, t_acceptanceThreshold)) != line.npos){
                 const int t_loc = line.find("t_a");
@@ -102,8 +139,29 @@ namespace mBFW::parameters{
         if (!t_a){
             std::cout << "Can't find t_a\n";
         }
-        return std::vector<double>{t_a, m_a};
+        return std::make_tuple(t_a, m_a);
     }
+
+    //* Read t_c,m_c from "t_c.txt" and set t_c,m_c. Defined as order parameter variance
+    const std::tuple<double, double> set_critical(const int& t_networkSize, const double& t_acceptanceThreshold){
+        double t_c = 0.0;
+        double m_c = 0.0;
+        std::ifstream t_cFile(rootPath + "t_c.txt");
+        std::string line;
+        while (getline(t_cFile, line)){
+            //* find line for input network size and acceptance threshold with order parameter variance
+            if (line.find(fileName::base(t_networkSize, t_acceptanceThreshold) + "\tt_c_var") != line.npos){
+                const int t_loc = line.find("t_c_var");
+                const int m_loc = line.find("m_c");
+                const int length = m_loc-t_loc-10;
+
+                t_c = std::stod(line.substr(t_loc+8, length));
+                m_c = std::stod(line.substr(m_loc+4));
+            }
+        }
+        return std::make_tuple(t_c, m_c);
+    }
+
 
 
 
