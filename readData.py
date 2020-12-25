@@ -21,13 +21,14 @@ for observable, relativePath in relativePathList.items():
 
 
 #* CSV Reader
-def readCSV(t_filename):
-    data = pd.read_csv(t_filename, sep=',', header=None)
+def readCSV(t_fileName):
+    data = pd.read_csv(t_fileName, sep=',', header=None)
     data = data.values.transpose()
     if (len(data) == 1):
         return data[0]
     else:
         return tuple([row for row in data])
+
 
 #* File Name Convections
 def nameGlobFile(t_networkSize, t_acceptanceThreshold):
@@ -39,6 +40,17 @@ def nameGlobFile_T(t_networkSize, t_acceptanceThreshold, t_time):
 def nameGlobFile_OP(t_networkSize, t_acceptanceThreshold, t_orderParameter):
     return "N{:.1e},G{:.1f}*,OP{:.4f}*".format(t_networkSize, t_acceptanceThreshold, t_orderParameter)
 
+
+#* Get the order parameter/time value in directory
+def get_repeater(t_observable, t_networkSize, t_acceptanceThreshold):
+    repeaterList = set()
+    if (t_observable == "clusterSizeDist_time" or t_observable == "orderParameterDist"):
+        target = "T"
+    elif (t_observable == "clusterSizeDist" or t_observable == "clusterSizeDist_exact"):
+        target = "OP"
+    for file in glob.glob(absolutePathList[t_observable] + nameGlobFile(t_networkSize, t_acceptanceThreshold)):
+        repeaterList.add(float(file[file.find(target)+len(target) : file.find(".txt")]))
+    return repeaterList
 
 #* Read Observables
 def read(t_observable, t_networkSize, t_acceptanceThreshold, t_reapeater=None):
@@ -59,6 +71,7 @@ def read(t_observable, t_networkSize, t_acceptanceThreshold, t_reapeater=None):
         print("There is problem at reading " + t_observable + " at N={:.1e}".format(t_networkSize) + ", G={:.1f}".format(t_acceptanceThreshold))
         return
     return readCSV(file[0])
+
 
 #* Read t_a
 def readt_a(t_networkSize, t_acceptanceThreshold):
