@@ -15,11 +15,17 @@ int main(int argc, char *argv[]){
     checkList["orderParameter_trial"] = false;
     checkList["meanClusterSize"] = false;
     checkList["meanClusterSize_trial"] = false;
-    checkList["orderParameterVariance"] = true;
-    checkList["orderParameterVariance_trial"] = true;
+    checkList["interEventTime"] = false;
+    checkList["orderParameterVariance"] = false;
+    checkList["orderParameterVariance_trial"] = false;
     checkList["clusterSizeDist"] = false;
     checkList["clusterSizeDist_exact"] = false;
     checkList["clusterSizeDist_time"] = false;
+    checkList["interEventTimeDist_time"] = true;
+    checkList["ageDist_time"] = false;
+    checkList["deltaUpperBoundDist_time"] = false;
+    checkList["orderParameterDist"] = false;
+
 
     //* Run data process
     auto start = std::chrono::system_clock::now();

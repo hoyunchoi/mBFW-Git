@@ -185,6 +185,9 @@ namespace mBFW::parameters{
                 m_c = std::stod(line.substr(m_loc+4));
             }
         }
+        if (!t_c){
+            std::cout << "Can't find t_c\n";
+        }
         return std::make_tuple(t_c, m_c);
     }
 
