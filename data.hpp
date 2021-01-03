@@ -27,7 +27,6 @@ namespace mBFW::data{
     int ensembleSize;
     int coreNum;
     std::string baseName;
-    fs::path p;
     int maxTime;
     int maxTrialTime;
     bool deletion;
@@ -163,10 +162,12 @@ namespace mBFW::data{
         if (targetFileNameList.size() <= 1 && deleteFileNameList.size() <= 1){
             std::vector<double> average;
             CSV::read(averageDirectory + *deleteFileNameList.begin(), average);
+            std::cout << "Passing file " << averageDirectory + *deleteFileNameList.begin() << "\n";
             return average;
         }
+
         //* Extract list of ensemble size from 'targe file list' and get total ensemble size
-        int totalEnsembleSize;
+        int totalEnsembleSize = 0;
         for (const std::string& targetFileName : targetFileNameList){
             totalEnsembleSize += extractEnsemble(targetFileName);
         }
@@ -183,8 +184,6 @@ namespace mBFW::data{
             average += temp * extractEnsemble(targetFileName) / (double)totalEnsembleSize;
         }
 
-        //* Write averaged file into base diretory
-        CSV::write(baseDirectory + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize, 0), average);
 
         //* Trim averaged data
         average.erase(std::remove_if(average.end()-average.size()/100, average.end(), [](const auto& value){return std::isnan(value) || value==0;}), average.end());
@@ -194,10 +193,15 @@ namespace mBFW::data{
             }
         }
 
-        //* Delete previous trimmed data and write new trimmed data
+        //* Delete previous trimmed data
         for (const std::string& deleteFileName : deleteFileNameList){
             conditionallyDeleteFile(averageDirectory + deleteFileName);
         }
+
+        //* Write averaged file and trimmed data
+        std::cout << "Writing file " << baseDirectory + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize, 0) << "\n";
+        CSV::write(baseDirectory + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize, 0), average);
+        std::cout << "Writing file " << averageDirectory + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize) << "\n";
         CSV::write(averageDirectory + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize), average);
 
         //* Return average value of observables
@@ -217,11 +221,12 @@ namespace mBFW::data{
 
         //* Break the function if only one ensemble file exists
         if (targetFileNameList.size() <= 1 && deleteFileNameList.size() <= 1){
+            std::cout << "Passing file " << logBinDirectory + *deleteFileNameList.begin() << "\n";
             return;
         }
 
         //* Find Ensemble Size of each target files and total ensemble size
-        int totalEnsembleSize;
+        int totalEnsembleSize = 0;
         for (const std::string& targetFileName : targetFileNameList){
             totalEnsembleSize += extractEnsemble(targetFileName);
         }
@@ -250,7 +255,9 @@ namespace mBFW::data{
         }
 
         //* Write averaged data and write log binned data
+        std::cout << "Writing file " << baseDirectory + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize, 0) << "\n";
         CSV::write(baseDirectory + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize, 0), average);
+        std::cout << "Writing file " << logBinDirectory + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize) << "\n";
         CSV::write(logBinDirectory + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize), binned);
 
         //* void return
@@ -294,7 +301,8 @@ namespace mBFW::data{
             }
             //* Break the reapeater if only one ensemble file exists
             if (targetFileNameList_repeater.size() <= 1 && deleteFileNameList_repeater.size() <= 1){
-                break;
+                std::cout << "Passing file " << logBinDirectory + *deleteFileNameList_repeater.begin() << "\n";
+                continue;
             }
 
             //* Read target files and average them according to weight corresponding to each ensemble size
@@ -324,11 +332,15 @@ namespace mBFW::data{
 
             //* Write averaged data and write log binned data
             if (standard == "OP"){
+                std::cout << "Writing file " << baseDirectory + fileName::NGEOP(networkSize, acceptanceThreshold, totalEnsembleSize, repeater, 0) << "\n";
                 CSV::write(baseDirectory + fileName::NGEOP(networkSize, acceptanceThreshold, totalEnsembleSize, repeater, 0), average);
+                std::cout << "Writing file " << logBinDirectory + fileName::NGEOP(networkSize, acceptanceThreshold, totalEnsembleSize, repeater) << "\n";
                 CSV::write(logBinDirectory + fileName::NGEOP(networkSize, acceptanceThreshold, totalEnsembleSize, repeater), binned);
             }
             else{
+                std::cout << "Writing file " << baseDirectory + fileName::NGET(networkSize, acceptanceThreshold, totalEnsembleSize, repeater, 0) << "\n";
                 CSV::write(baseDirectory + fileName::NGET(networkSize, acceptanceThreshold, totalEnsembleSize, repeater, 0), average);
+                std::cout << "Writing file " << logBinDirectory + fileName::NGET(networkSize, acceptanceThreshold, totalEnsembleSize, repeater) << "\n";
                 CSV::write(logBinDirectory + fileName::NGET(networkSize, acceptanceThreshold, totalEnsembleSize, repeater), binned);
             }
         }
@@ -369,7 +381,8 @@ namespace mBFW::data{
 
             //* Break the reapeater if only one ensemble file exists
             if (targetFileNameList_repeater.size() <= 1 && deleteFileNameList_repeater.size() <= 1){
-                break;
+                std::cout << "Passing file " << linBinDirectory + *deleteFileNameList_repeater.begin() << "\n";
+                continue;
             }
 
             //* Read target files and average them according to weight corresponding to each ensemble size
@@ -398,7 +411,9 @@ namespace mBFW::data{
             }
 
             //* Write averaged data and write log binned data
+            std::cout << "Writing file " << baseDirectory + fileName::NGET(networkSize, acceptanceThreshold, totalEnsembleSize, repeater, 0) << "\n";
             CSV::write(baseDirectory + fileName::NGET(networkSize, acceptanceThreshold, totalEnsembleSize, repeater, 0), average);
+            std::cout << "Writing file " << linBinDirectory + fileName::NGET(networkSize, acceptanceThreshold, totalEnsembleSize, repeater) << "\n";
             CSV::write(linBinDirectory + fileName::NGET(networkSize, acceptanceThreshold, totalEnsembleSize, repeater), binned);
         }
 
@@ -495,113 +510,6 @@ namespace mBFW::data{
             opd();
         }
     }
-
-    // const int temporary_Nstr(const std::string N_str){
-    //     if (N_str == "1.0e+04"){
-    //         return 10000;
-    //     }
-    //     else if (N_str == "2.0e+04"){
-    //         return 20000;
-    //     }
-    //     else if (N_str == "2.0e+04"){
-    //         return 20000;
-    //     }
-    //     else if (N_str == "4.0e+04"){
-    //         return 40000;
-    //     }
-    //     else if (N_str == "8.0e+04"){
-    //         return 80000;
-    //     }
-    //     else if (N_str == "1.6e+05"){
-    //         return 160000;
-    //     }
-    //     else if (N_str == "3.2e+05"){
-    //         return 320000;
-    //     }
-    //     else if (N_str == "6.4e+05"){
-    //         return 640000;
-    //     }
-    //     else if (N_str == "1.3e+06"){
-    //         return 1280000;
-    //     }
-    //     else if (N_str == "2.6e+06"){
-    //         return 2560000;
-    //     }
-    //     else if (N_str == "5.1e+06"){
-    //         return 5120000;
-    //     }
-    //     else if (N_str == "1.0e+07"){
-    //         return 10240000;
-    //     }
-    //     else{
-    //         std::cout<<"check N_str\n";
-    //         return 0;
-    //     }
-    // }
-    // void temporary_inflecton(){
-    //     std::ofstream writeFile;
-    //     const std::string directory = rootPath + "orderParameter/";
-    //     std::ifstream file(directory + "inflection.txt");
-    //     std::string currentString;
-    //     writeFile.open(rootPath + "orderParameter/inflection1.txt", std::ios_base::app);
-    //     while (getline(file, currentString)){
-    //         const int N = temporary_Nstr(currentString.substr(currentString.find("N")+1, 7));
-    //         const double G = std::stod(currentString.substr(currentString.find("G")+1, 3));
-    //         const std::string inflection = currentString.substr(currentString.find("(")+1, currentString.find(")")-currentString.find("(")-1);
-    //         const double inflection_time = std::stod(inflection.substr(0,inflection.find(",")));
-    //         const double inflection_op = std::stod(inflection.substr(inflection.find(",")+2));
-    //         const double t_a = std::stod(currentString.substr(currentString.find("t_a")+5));
-
-    //         const std::vector<std::string> targetFileNameList = findTargetFileNameList(directory+"average/", fileName::base(N, G));
-    //         if (targetFileNameList.size()!=1){
-    //             std::cout<<"check N:"<< N <<", G:"<<G <<"\n";
-    //         }
-    //         std::vector<double> op;
-    //         CSV::read(directory+"average/" + targetFileNameList[0], op);
-    //         const int l_a = t_a*N;
-    //         const double m_a = op[l_a];
-
-    //         writeFile << fileName::base(N, G) << "\tinflection: " << std::setprecision(15) << inflection_time << "," << inflection_op << "\tt_a:" << t_a << ", m_a:" << m_a <<"\n";
-    //     }
-    //     writeFile.close();
-    // }
-
-
-    // void temporary_variance(const int& t_networkSize, const double& t_acceptanceThreshold){
-    //     std::vector<std::string> fileList;
-    //     fileList = findTargetFileNameList(rootPath + "orderParameterVariance/");
-    //     for (auto file : fileList){
-    //         std::vector<double> variance;
-    //         CSV::read(rootPath + "orderParameterVariance/"+file, variance);
-    //         for (auto& e : variance){
-    //             e<0 ? e = 0 : e = pow(e/t_networkSize, 2.0);
-    //         }
-    //         CSV::write(rootPath + "orderParameterVariance/"+file, variance);
-    //     }
-    //     fileList = findTargetFileNameList(rootPath + "orderParameterVariance_trial/");
-    //     for (auto file : fileList){
-    //         std::vector<double> variance;
-    //         CSV::read(rootPath + "orderParameterVariance_trial/"+file, variance);
-    //         for (auto& e : variance){
-    //             e<0 ? e = 0 : e = pow(e/t_networkSize, 2.0);
-    //         }
-    //         CSV::write(rootPath + "orderParameterVariance_trial/"+file, variance);
-    //     }
-    //     fileList = findTargetFileNameList(rootPath + "orderParameterVariance/average/");
-    //     for (auto file : fileList){
-    //         std::vector<double> variance;
-    //         CSV::read(rootPath + "orderParameterVariance/average/"+file, variance);
-    //         variance = elementPow(variance/t_networkSize, 2.0);
-    //         CSV::write(rootPath + "orderParameterVariance/average/"+file, variance);
-    //     }
-    //     fileList = findTargetFileNameList(rootPath + "orderParameterVariance_trial/average/");
-    //     for (auto file : fileList){
-    //         std::vector<double> variance;
-    //         CSV::read(rootPath + "orderParameterVariance_trial/average/"+file, variance);
-    //         variance = elementPow(variance/t_networkSize, 2.0);
-    //         CSV::write(rootPath + "orderParameterVariance_trial/average/"+file, variance);
-    //     }
-    // }
 
     // //! average process
     // //* t_c : only for type check

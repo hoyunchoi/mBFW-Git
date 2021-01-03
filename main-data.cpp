@@ -11,20 +11,20 @@ int main(int argc, char *argv[]){
 
     //* Check list of each observables
     std::map<std::string, bool> checkList;
-    checkList["orderParameter"] = false;
-    checkList["orderParameter_trial"] = false;
-    checkList["meanClusterSize"] = false;
-    checkList["meanClusterSize_trial"] = false;
-    checkList["interEventTime"] = false;
-    checkList["orderParameterVariance"] = false;
-    checkList["orderParameterVariance_trial"] = false;
-    checkList["clusterSizeDist"] = false;
-    checkList["clusterSizeDist_exact"] = false;
-    checkList["clusterSizeDist_time"] = false;
-    checkList["interEventTimeDist_time"] = true;
-    checkList["ageDist_time"] = false;
-    checkList["deltaUpperBoundDist_time"] = false;
-    checkList["orderParameterDist"] = false;
+    checkList["orderParameter"] = true;
+    checkList["orderParameter_trial"] = true;
+    checkList["meanClusterSize"] = true;
+    checkList["meanClusterSize_trial"] = true;
+    checkList["interEventTime"] = true;
+    checkList["orderParameterVariance"] = true;
+    checkList["orderParameterVariance_trial"] = true;
+    checkList["clusterSizeDist"] = true;
+    checkList["clusterSizeDist_exact"] = true;
+    checkList["clusterSizeDist_time"] = true;
+    checkList["interEventTimeDist_time"] =true;
+    checkList["ageDist_time"] = true;
+    checkList["deltaUpperBoundDist_time"] = true;
+    checkList["orderParameterDist"] = true;
 
 
     //* Run data process
