@@ -3,15 +3,27 @@ import pandas as pd
 import glob
 
 relativePathList = {}
+relativePathList["ageDist_time/after"] = "/logBin/"
+relativePathList["ageDist_time/before"] = "/logBin/"
+relativePathList["ageDist_time/during"] = "/logBin/"
 relativePathList["clusterSizeDist"] = "/logBin/"
 relativePathList["clusterSizeDist_exact"] = "/logBin/"
 relativePathList["clusterSizeDist_time"] = "/logBin/"
+relativePathList["deltaUpperBoundDist_time/after"] = "/logBin/"
+relativePathList["deltaUpperBoundDist_time/before"] = "/logBin/"
+relativePathList["deltaUpperBoundDist_time/during"] = "/logBin/"
+relativePathList["interEventTime"] = "/average/"
+relativePathList["interEventTimeDist_time/after"] = "/logBin/"
+relativePathList["interEventTimeDist_time/before"] = "/logBin/"
+relativePathList["interEventTimeDist_time/during"] = "/logBin/"
 relativePathList["meanClusterSize"] = "/average/"
 relativePathList["meanClusterSize_trial"] = "/average/"
 relativePathList["orderParameter"] = "/average/"
 relativePathList["orderParameter_trial"] = "/average/"
+relativePathList["orderParameterDist"] = "/linbin/"
 relativePathList["orderParameterVariance"] = "/average/"
 relativePathList["orderParameterVariance_trial"] = "/average/"
+
 
 
 rootPath = "../data/mBFW_hybrid/"
@@ -31,44 +43,44 @@ def readCSV(t_fileName):
 
 
 #* File Name Convections
-def nameGlobFile(t_networkSize, t_acceptanceThreshold):
+def NG(t_networkSize, t_acceptanceThreshold):
     return "N{:.1e},G{:.1f}*".format(t_networkSize, t_acceptanceThreshold)
 
-def nameGlobFile_T(t_networkSize, t_acceptanceThreshold, t_time):
+def NGT(t_networkSize, t_acceptanceThreshold, t_time):
     return "N{:.1e},G{:.1f}*,T{:.4f}*".format(t_networkSize, t_acceptanceThreshold, t_time)
 
-def nameGlobFile_OP(t_networkSize, t_acceptanceThreshold, t_orderParameter):
+def NGOP(t_networkSize, t_acceptanceThreshold, t_orderParameter):
     return "N{:.1e},G{:.1f}*,OP{:.4f}*".format(t_networkSize, t_acceptanceThreshold, t_orderParameter)
 
 
 #* Get the order parameter/time value in directory
-def get_repeater(t_observable, t_networkSize, t_acceptanceThreshold):
+def extractRepeater(t_type, t_networkSize, t_acceptanceThreshold):
     repeaterList = set()
-    if (t_observable == "clusterSizeDist_time" or t_observable == "orderParameterDist"):
+    if (t_type == "clusterSizeDist_time" or t_type == "orderParameterDist"):
         target = "T"
-    elif (t_observable == "clusterSizeDist" or t_observable == "clusterSizeDist_exact"):
+    elif (t_type == "clusterSizeDist" or t_type == "clusterSizeDist_exact"):
         target = "OP"
-    for file in glob.glob(absolutePathList[t_observable] + nameGlobFile(t_networkSize, t_acceptanceThreshold)):
+    for file in glob.glob(absolutePathList[t_type] + NG(t_networkSize, t_acceptanceThreshold)):
         repeaterList.add(float(file[file.find(target)+len(target) : file.find(".txt")]))
     return repeaterList
 
 #* Read Observables
-def read(t_observable, t_networkSize, t_acceptanceThreshold, t_reapeater=None):
+def read(t_type, t_networkSize, t_acceptanceThreshold, t_reapeater=None):
     #* Read time-accumulated distributions
-    if (t_observable == "clusterSizeDist_time" or t_observable == "orderParameterDist"):
-        file = glob.glob(absolutePathList[t_observable] + nameGlobFile_T(t_networkSize, t_acceptanceThreshold, t_reapeater))
+    if (t_type == "clusterSizeDist_time" or t_type == "orderParameterDist"):
+        file = glob.glob(absolutePathList[t_type] + NGT(t_networkSize, t_acceptanceThreshold, t_reapeater))
 
     #* Read orderparameter-accumulated distributions
-    elif (t_observable == "clusterSizeDist" or t_observable == "clusterSizeDist_exact"):
-        file = glob.glob(absolutePathList[t_observable] + nameGlobFile_OP(t_networkSize, t_acceptanceThreshold, t_reapeater))
+    elif (t_type == "clusterSizeDist" or t_type == "clusterSizeDist_exact"):
+        file = glob.glob(absolutePathList[t_type] + NGOP(t_networkSize, t_acceptanceThreshold, t_reapeater))
 
     #* Read general data
     else:
-        file = glob.glob(absolutePathList[t_observable] + nameGlobFile(t_networkSize, t_acceptanceThreshold))
+        file = glob.glob(absolutePathList[t_type] + NG(t_networkSize, t_acceptanceThreshold))
 
     #* Check found files
     if (len(file) != 1):
-        print("There is problem at reading " + t_observable + " at N={:.1e}".format(t_networkSize) + ", G={:.1f}".format(t_acceptanceThreshold))
+        print("There is problem at reading " + t_type + " at N={:.1e}".format(t_networkSize) + ", G={:.1f}".format(t_acceptanceThreshold))
         return
     return readCSV(file[0])
 
