@@ -30,7 +30,8 @@ int main(int argc, char *argv[]){
     //* Run data process
     auto start = std::chrono::system_clock::now();
     mBFW::data::setParameters(networkSize, acceptanceThreshold, logBinDelta, deletion);
-    mBFW::data::process(checkList);
+    // mBFW::data::process(checkList);
+    mBFW::data::temp_ageDist();
     std::chrono::duration<double> sec = std::chrono::system_clock::now()-start;
     printf("%.6f second to process data\n", sec.count());
 

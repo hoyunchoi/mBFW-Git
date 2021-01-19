@@ -100,11 +100,12 @@ namespace mBFW::data{
     }
 
     //* Integer Log Bin
-    const std::map<double, double> intLogBin(const std::map<int, double>& t_raw){
+    std::map<double, double> intLogBin(const std::map<int, double>& t_raw){
         //* Setup values for integer log binning
         const std::vector<double> exponentList = arange(0, 10, logBinDelta);
         const std::vector<double> min = elementPow(10.0, exponentList);
         std::vector<double> value, difference;
+        value.reserve(min.size()-1); difference.reserve(min.size()-1);
         for (int i=0; i<min.size()-1; ++i){
             value.emplace_back(std::sqrt(min[i]*min[i+1]));
             difference.emplace_back(min[i+1]-min[i]);
@@ -116,6 +117,30 @@ namespace mBFW::data{
             for (int i=0; i<value.size(); ++i){
                 if (it->first < min[i+1]){
                     binned[value[i]] += it->second / difference[i];
+                    break;
+                }
+            }
+        }
+        return binned;
+    }
+
+    std::map<double, double> intLogBin(const std::vector<double>& t_raw){
+        //* Setup values for integer log binning
+        const std::vector<double> exponentList = arange(0, 10, logBinDelta);
+        const std::vector<double> min = elementPow(10.0, exponentList);
+        std::vector<double> value, difference;
+        value.reserve(min.size()-1); difference.reserve(min.size()-1);
+        for (int i=0; i<min.size()-1; ++i){
+            value.emplace_back(std::sqrt(min[i]*min[i+1]));
+            difference.emplace_back(min[i+1]-min[i]);
+        }
+
+        //* Bin the data
+        std::map<double, double> binned;
+        for (unsigned i=0; i<t_raw.size(); ++i){
+            for (unsigned j=0; j<value.size(); ++j){
+                if (i+1 < min[j+1]){
+                    binned[value[j]] += t_raw[i] / difference[j];
                     break;
                 }
             }
@@ -210,7 +235,7 @@ namespace mBFW::data{
     }
 
     //* Process Distribution distinguished by discontinuous jump
-    //! Inter Event Time Distribution (time, op), Age Distribution (time, op), Delta Upper Bound Distribution (time, op)
+    //! Inter Event Time Distribution (time, op), Delta Upper Bound Distribution (time, op)
     void dist(const std::string& t_type = ""){
         //* Define directories
         const std::string baseDirectory = rootPath + t_type + "/";
@@ -249,7 +274,7 @@ namespace mBFW::data{
         //* Write averaged data
         std::cout << "Writing file " << baseDirectory + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize, 0) << "\n";
         CSV::write(baseDirectory + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize, 0), average);
-        
+
         //* Log Binning data
         std::map<double, double> binned = intLogBin(average);
         binned /= accumulate(binned);
@@ -265,6 +290,64 @@ namespace mBFW::data{
 
         //* void return
         return;
+    }
+
+    //* Process age distribution
+    //! Age Distribution (time, op)
+    void ageDist(const std::string& t_type = ""){
+        for (const std::string& state : states){
+            //* Define directories
+            const std::string baseDirectory = rootPath + "ageDist_" + t_type + "/" + state + "/";
+            const std::string logBinDirectory = defineAdditionalDirectory(baseDirectory, "logBin");
+
+            //* Find target files at base directory and logBin directory corresponding to input system size and acceptance threshold
+            std::set<std::string> targetFileNameList = findTargetFileNameList(baseDirectory, baseName);
+            std::set<std::string> deleteFileNameList = findTargetFileNameList(logBinDirectory, baseName);
+
+            //* Break the function if only one ensemble file exists
+            if (targetFileNameList.size() <=1 && deleteFileNameList.size() <= 1){
+                std::cout << "Passing file " << logBinDirectory + *deleteFileNameList.begin() << "\n";
+                continue;
+            }
+
+            //* Find Ensemble Size of each target files and total ensemble size
+            int totalEnsembleSize = 0;
+            for (const std::string& targetFileName : targetFileNameList){
+                totalEnsembleSize += extractEnsemble(targetFileName);
+            }
+
+            //* Read target files and average them according to weight corresponding to each ensemble size
+            std::vector<double> average;
+            for (const std::string& targetFileName : targetFileNameList){
+                std::vector<double> temp;
+                CSV::read(baseDirectory + targetFileName, temp);
+                conditionallyDeleteFile(baseDirectory + targetFileName);
+                average += temp * extractEnsemble(targetFileName) / (double)totalEnsembleSize;
+            }
+
+            //* Normalize averaged data
+            average /= std::accumulate(average.begin(), average.end(), 0.0);
+
+            //* Write averaged data
+            std::cout << "Writing file " << baseDirectory + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize, 0) << "\n";
+            CSV::write(baseDirectory + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize, 0), average);
+
+            //* Log Binning data
+            std::map<double, double> binned = intLogBin(average);
+            binned /= accumulate(binned);
+
+            //* Delete previous log binned data
+            for (const std::string fileName : deleteFileNameList){
+                conditionallyDeleteFile(logBinDirectory + fileName);
+            }
+
+            //* Write log binned data
+            std::cout << "Writing file " << logBinDirectory + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize) << "\n";
+            CSV::write(logBinDirectory + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize), binned);
+
+            //* void return
+            return;
+        }
     }
 
     //* Process cluster size distribution
@@ -511,6 +594,31 @@ namespace mBFW::data{
         }
         if (t_checkList.at("orderParameterDist")){
             opd();
+        }
+    }
+
+    void temp_ageDist(){
+        for (const auto& state : states){
+            std::vector<double> dist(networkSize, 0.0);
+            const std::string directory = rootPath + "ageDist_time/" + state + "/";
+            auto fileList = findTargetFileNameList(directory, baseName);
+            std::string readFile;
+            if (fileList.size() != 1){
+                std::cout << "More than one file\n"<<std::endl;
+                return;
+            }
+            else{
+                for (auto e : fileList){
+                    readFile = directory + e;
+                }
+            }
+            std::map<int, double> temp;
+            CSV::read(readFile, temp);
+            for (const auto& e : temp){
+                dist[e.first] = e.second;
+            }
+            conditionallyDeleteFile(readFile);
+            CSV::write(readFile, dist);
         }
     }
 
