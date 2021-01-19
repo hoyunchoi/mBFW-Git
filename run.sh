@@ -1,4 +1,5 @@
 #!/bin/bash
+
 type=$1
 networkSize=$2
 g=$3

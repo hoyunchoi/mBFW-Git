@@ -3,24 +3,24 @@ import pandas as pd
 import glob
 
 relativePathList = {}
-relativePathList["ageDist_time/after"] = "/logBin/"
 relativePathList["ageDist_time/before"] = "/logBin/"
 relativePathList["ageDist_time/during"] = "/logBin/"
+relativePathList["ageDist_time/after"] = "/logBin/"
 relativePathList["clusterSizeDist"] = "/logBin/"
 relativePathList["clusterSizeDist_exact"] = "/logBin/"
 relativePathList["clusterSizeDist_time"] = "/logBin/"
-relativePathList["deltaUpperBoundDist_time/after"] = "/logBin/"
 relativePathList["deltaUpperBoundDist_time/before"] = "/logBin/"
 relativePathList["deltaUpperBoundDist_time/during"] = "/logBin/"
+relativePathList["deltaUpperBoundDist_time/after"] = "/logBin/"
 relativePathList["interEventTime"] = "/average/"
-relativePathList["interEventTimeDist_time/after"] = "/logBin/"
 relativePathList["interEventTimeDist_time/before"] = "/logBin/"
 relativePathList["interEventTimeDist_time/during"] = "/logBin/"
+relativePathList["interEventTimeDist_time/after"] = "/logBin/"
 relativePathList["meanClusterSize"] = "/average/"
 relativePathList["meanClusterSize_trial"] = "/average/"
 relativePathList["orderParameter"] = "/average/"
 relativePathList["orderParameter_trial"] = "/average/"
-relativePathList["orderParameterDist"] = "/linbin/"
+relativePathList["orderParameterDist"] = "/linBin/"
 relativePathList["orderParameterVariance"] = "/average/"
 relativePathList["orderParameterVariance_trial"] = "/average/"
 

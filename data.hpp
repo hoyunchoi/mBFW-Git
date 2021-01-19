@@ -184,6 +184,9 @@ namespace mBFW::data{
             average += temp * extractEnsemble(targetFileName) / (double)totalEnsembleSize;
         }
 
+        //* Write average data
+        std::cout << "Writing file " << baseDirectory + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize, 0) << "\n";
+        CSV::write(baseDirectory + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize, 0), average);
 
         //* Trim averaged data
         average.erase(std::remove_if(average.end()-average.size()/100, average.end(), [](const auto& value){return std::isnan(value) || value==0;}), average.end());
@@ -198,9 +201,7 @@ namespace mBFW::data{
             conditionallyDeleteFile(averageDirectory + deleteFileName);
         }
 
-        //* Write averaged file and trimmed data
-        std::cout << "Writing file " << baseDirectory + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize, 0) << "\n";
-        CSV::write(baseDirectory + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize, 0), average);
+        //* Write trimmed data
         std::cout << "Writing file " << averageDirectory + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize) << "\n";
         CSV::write(averageDirectory + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize), average);
 
@@ -245,6 +246,10 @@ namespace mBFW::data{
         //* Normalize averaged data
         average /= accumulate(average);
 
+        //* Write averaged data
+        std::cout << "Writing file " << baseDirectory + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize, 0) << "\n";
+        CSV::write(baseDirectory + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize, 0), average);
+        
         //* Log Binning data
         std::map<double, double> binned = intLogBin(average);
         binned /= accumulate(binned);
@@ -254,9 +259,7 @@ namespace mBFW::data{
             conditionallyDeleteFile(logBinDirectory + fileName);
         }
 
-        //* Write averaged data and write log binned data
-        std::cout << "Writing file " << baseDirectory + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize, 0) << "\n";
-        CSV::write(baseDirectory + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize, 0), average);
+        //* Write log binned data
         std::cout << "Writing file " << logBinDirectory + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize) << "\n";
         CSV::write(logBinDirectory + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize), binned);
 
