@@ -1,6 +1,7 @@
 // #include <iostream>
 #include <chrono>
 
+#include "parameters.hpp"
 #include "data.hpp"
 
 int main(int argc, char *argv[]){
@@ -8,6 +9,16 @@ int main(int argc, char *argv[]){
     const int networkSize=std::stoul(argv[2]);
     const bool deletion = true;
     const double logBinDelta = 0.1;
+
+    //* Check input network size and acceptance threshold
+    if (mBFW::parameters::networkSizeList.find(networkSize) == mBFW::parameters::networkSizeList.end()){
+        std::cout << "WARNING: network size is not valid\n";
+        return -1;
+    }
+    if (mBFW::parameters::acceptanceThresholdList.find(acceptanceThreshold) == mBFW::parameters::acceptanceThresholdList.end()){
+        std::cout << "WARNING: acceptance threshold is not valid\n";
+        return -1;
+    }
 
     //* Check list of each observables
     std::map<std::string, bool> checkList;
@@ -30,8 +41,7 @@ int main(int argc, char *argv[]){
     //* Run data process
     auto start = std::chrono::system_clock::now();
     mBFW::data::setParameters(networkSize, acceptanceThreshold, logBinDelta, deletion);
-    // mBFW::data::process(checkList);
-    mBFW::data::temp_ageDist();
+    mBFW::data::process(checkList);
     std::chrono::duration<double> sec = std::chrono::system_clock::now()-start;
     printf("%.6f second to process data\n", sec.count());
 

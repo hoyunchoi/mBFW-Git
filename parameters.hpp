@@ -13,6 +13,8 @@
 namespace mBFW::parameters{
     using namespace linearAlgebra;
     const std::string rootPath = "../data/mBFW_hybrid/";
+    const std::set<int> networkSizeList = {10000, 20000, 40000, 80000, 160000, 320000, 640000, 1280000, 2560000, 5120000, 10240000};
+    const std::set<double> acceptanceThresholdList = {0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9};
 
     //* Set parameter for orderParameter_clusterSizeDist
     std::set<double> set_orderParameter_clusterSizeDist(const int& t_networkSize, const double& t_acceptanceThreshold){

@@ -44,7 +44,6 @@ namespace mBFW::data{
         logBinDelta = t_logBinDelta;
 
         baseName = fileName::base(t_networkSize, t_acceptanceThreshold);
-
     }
 
     //*------------------------------------------- functions for data process ------------------------------------------------------
@@ -139,7 +138,7 @@ namespace mBFW::data{
         std::map<double, double> binned;
         for (unsigned i=0; i<t_raw.size(); ++i){
             for (unsigned j=0; j<value.size(); ++j){
-                if (i+1 < min[j+1]){
+                if (i < min[j+1]){
                     binned[value[j]] += t_raw[i] / difference[j];
                     break;
                 }
@@ -594,31 +593,6 @@ namespace mBFW::data{
         }
         if (t_checkList.at("orderParameterDist")){
             opd();
-        }
-    }
-
-    void temp_ageDist(){
-        for (const auto& state : states){
-            std::vector<double> dist(networkSize, 0.0);
-            const std::string directory = rootPath + "ageDist_time/" + state + "/";
-            auto fileList = findTargetFileNameList(directory, baseName);
-            std::string readFile;
-            if (fileList.size() != 1){
-                std::cout << "More than one file\n"<<std::endl;
-                return;
-            }
-            else{
-                for (auto e : fileList){
-                    readFile = directory + e;
-                }
-            }
-            std::map<int, double> temp;
-            CSV::read(readFile, temp);
-            for (const auto& e : temp){
-                dist[e.first] = e.second;
-            }
-            conditionallyDeleteFile(readFile);
-            CSV::write(readFile, dist);
         }
     }
 

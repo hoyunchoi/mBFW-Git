@@ -1,6 +1,7 @@
 #include <iostream>
 #include <chrono>
 
+#include "parameters.hpp"
 #include "generate.hpp"
 
 int main(int argc, char *argv[]){
@@ -11,6 +12,16 @@ int main(int argc, char *argv[]){
     const std::string machine=argv[4];
     const int coreNum=std::stoul(argv[5]);
     constexpr int randomEngineSeed = -1;
+
+    //* Check input network size and acceptance threshold
+    if (mBFW::parameters::networkSizeList.find(networkSize) == mBFW::parameters::networkSizeList.end()){
+        std::cout << "WARNING: network size is not valid\n";
+        return -1;
+    }
+    if (mBFW::parameters::acceptanceThresholdList.find(acceptanceThreshold) == mBFW::parameters::acceptanceThresholdList.end()){
+        std::cout << "WARNING: acceptance threshold is not valid\n";
+        return -1;
+    }
 
     //* Run mBFW
     auto start=std::chrono::system_clock::now();
