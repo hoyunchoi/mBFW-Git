@@ -1,10 +1,9 @@
 #!/bin/bash
 
-type=$1
+g=$1
 networkSize=$2
-g=$3
-ensembleSize=$4
-machine=$5
-coreNum=$6
+ensembleSize=$3
+machine=$4
+coreNum=$5
 
-spg run ${machine} ./bin/${type} ${networkSize} ${g} ${ensembleSize} ${machine} ${coreNum} >> ./log.txt
+spg run ${machine} ./mBFW.sh ${g} ${networkSize} ${ensembleSize} ${coreNum}

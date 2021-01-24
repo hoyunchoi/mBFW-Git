@@ -9,8 +9,7 @@ int main(int argc, char *argv[]){
     const int networkSize=std::stoul(argv[1]);
     const double acceptanceThreshold=std::stod(argv[2]);
     const int ensembleSize=std::stoul(argv[3]);
-    const std::string machine=argv[4];
-    const int coreNum=std::stoul(argv[5]);
+    const int coreNum=std::stoul(argv[4]);
     constexpr int randomEngineSeed = -1;
 
     //* Check input network size and acceptance threshold
@@ -29,7 +28,7 @@ int main(int argc, char *argv[]){
     mBFW::generate::run();
     std::chrono::duration<double> sec=std::chrono::system_clock::now()-start;
     FILE* log = fopen("log.txt", "a");
-    fprintf(log, " %.6fs for N=%.1e, g=%.1f, ensemble=%d-%d at %s\n", sec.count(),(double)networkSize, acceptanceThreshold, ensembleSize, coreNum, machine.c_str());
+    fprintf(log, " %.6fs for N=%.1e, g=%.1f, ensemble=%d-%d\n", sec.count(),(double)networkSize, acceptanceThreshold, ensembleSize, coreNum);
 
     //* Save Data
     start = std::chrono::system_clock::now();
