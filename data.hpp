@@ -535,10 +535,13 @@ namespace mBFW::data{
         const double t_a = (double)l_a/networkSize;
         const double m_a = smoothedOrderParameter[l_a];
 
-        //* Print at t_a.txt
+        //* Save the data
         std::ofstream writeFile;
-        writeFile.open(rootPath + "t_a.txt", std::ios_base::app);
-        writeFile << fileName::base(networkSize, acceptanceThreshold) << "\tinflection: " << std::setprecision(15) << inflectionPoint[0] << "," << inflectionPoint[1] << "\tt_a:" << t_a << ", m_a:" << m_a <<"\n";
+        writeFile.open(rootPath + "points/" + fileName::base(netwokrSize, acceptanceThreshold) + ".txt", std::ios_base::app);
+        writeFile << std::setprecision(15) << "t_a: " << t_a << "\n";
+        writeFile << std::setprecision(15) << "m_a: " << m_a << "\n";
+        writeFile << std::setprecision(15) << "t_inflection: " << inflectionPoint[0] << "\n";
+        writeFile << std::setprecision(15) << "m_inflection: " << inflectionPoint[1] << "\n";
         writeFile.close();
     }
 

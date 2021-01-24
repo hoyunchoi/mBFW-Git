@@ -20,52 +20,80 @@ namespace mBFW::parameters{
     std::set<double> set_orderParameter_clusterSizeDist(const int& t_networkSize, const double& t_acceptanceThreshold){
         std::set<double> orderParameter_clusterSizeDist;
         if (t_acceptanceThreshold == 0.2){
-            orderParameter_clusterSizeDist = {0.01, 0.05, 0.1, 0.15, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95, 0.96, 0.97, 0.98, 0.99, 0.992, 0.994, 0.996, 0.998};
-            if (t_networkSize <= 40000){
-                orderParameter_clusterSizeDist = {0.951, 0.952, 0.953, 0.954, 0.955, 0.956, 0.957, 0.958, 0.959, 0.961, 0.962, 0.963, 0.964, 0.965, 0.966, 0.967, 0.968, 0.969};
-            }
-            else {
-                orderParameter_clusterSizeDist = {0.961, 0.962, 0.963, 0.964, 0.965, 0.966, 0.967, 0.968, 0.969, 0.971, 0.972, 0.973, 0.974, 0.975, 0.976, 0.978, 0.979};
-            }
+            // orderParameter_clusterSizeDist = {0.01, 0.05, 0.1, 0.15, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95, 0.96, 0.97, 0.98, 0.99, 0.992, 0.994, 0.996, 0.998};
+            // if (t_networkSize <= 40000){
+            //     orderParameter_clusterSizeDist = {0.951, 0.952, 0.953, 0.954, 0.955, 0.956, 0.957, 0.958, 0.959, 0.961, 0.962, 0.963, 0.964, 0.965, 0.966, 0.967, 0.968, 0.969};
+            // }
+            // else {
+            //     orderParameter_clusterSizeDist = {0.961, 0.962, 0.963, 0.964, 0.965, 0.966, 0.967, 0.968, 0.969, 0.971, 0.972, 0.973, 0.974, 0.975, 0.976, 0.978, 0.979};
+            // }
         }
         else if (t_acceptanceThreshold == 0.3){
-            orderParameter_clusterSizeDist = {0.01, 0.05, 0.1, 0.15, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95, 0.955, 0.96, 0.965, 0.97};
-            orderParameter_clusterSizeDist = {0.81, 0.82, 0.83, 0.84, 0.85, 0.86, 0.87, 0.88, 0.89, 0.91, 0.92, 0.93, 0.94};
+            // orderParameter_clusterSizeDist = {0.01, 0.05, 0.1, 0.15, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95, 0.955, 0.96, 0.965, 0.97};
+            // orderParameter_clusterSizeDist = {0.81, 0.82, 0.83, 0.84, 0.85, 0.86, 0.87, 0.88, 0.89, 0.91, 0.92, 0.93, 0.94};
         }
         else if (t_acceptanceThreshold == 0.4){
-            orderParameter_clusterSizeDist = {0.01, 0.05, 0.1, 0.15, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.905, 0.91, 0.915, 0.92, 0.95};
-            orderParameter_clusterSizeDist = {0.65, 0.66, 0.67, 0.68, 0.69, 0.71, 0.72, 0.73, 0.74, 0.75, 0.76, 0.77, 0.78, 0.79, 0.81, 0.82, 0.83, 0.84, 0.85};
+            // orderParameter_clusterSizeDist = {0.01, 0.05, 0.1, 0.15, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.905, 0.91, 0.915, 0.92, 0.95};
+            // orderParameter_clusterSizeDist = {0.65, 0.66, 0.67, 0.68, 0.69, 0.71, 0.72, 0.73, 0.74, 0.75, 0.76, 0.77, 0.78, 0.79, 0.81, 0.82, 0.83, 0.84, 0.85};
+            orderParameter_clusterSizeDist = {0.845, 0.855, 0.86, 0.865, 0.987, 0.875, 0.88, 0.885, 0.89, 0.895};
         }
         else if (t_acceptanceThreshold == 0.5){
-            orderParameter_clusterSizeDist = {0.01, 0.05, 0.1, 0.15, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.81, 0.82, 0.83, 0.84, 0.85, 0.86, 0.87, 0.88, 0.89, 0.9};
-            if (t_networkSize <= 20000){
-                orderParameter_clusterSizeDist = {0.79, 0.791, 0.792, 0.793, 0.794, 0.795, 0.796, 0.797, 0.798, 0.799, 0.801, 0.802, 0.803, 0.804, 0.805, 0.806, 0.807, 0.808, 0.809};
-            }
-            else if (t_networkSize <= 80000){
-                orderParameter_clusterSizeDist = {0.801, 0.802, 0.803, 0.804, 0.805, 0.806, 0.807, 0.808, 0.809, 0.811, 0.812, 0.813, 0.814, 0.815, 0.816, 0.817, 0.818, 0.819};
-            }
-            else{
-                orderParameter_clusterSizeDist = {0.811, 0.812, 0.813, 0.814, 0.815, 0.816, 0.817, 0.818, 0.819, 0.821, 0.822, 0.823, 0.824, 0.825, 0.826, 0.827, 0.828, 0.829};
+            // orderParameter_clusterSizeDist = {0.01, 0.05, 0.1, 0.15, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.81, 0.82, 0.83, 0.84, 0.85, 0.86, 0.87, 0.88, 0.89, 0.9};
+            // if (t_networkSize <= 20000){
+            //     orderParameter_clusterSizeDist = {0.79, 0.791, 0.792, 0.793, 0.794, 0.795, 0.796, 0.797, 0.798, 0.799, 0.801, 0.802, 0.803, 0.804, 0.805, 0.806, 0.807, 0.808, 0.809};
+            // }
+            // else if (t_networkSize <= 80000){
+            //     orderParameter_clusterSizeDist = {0.801, 0.802, 0.803, 0.804, 0.805, 0.806, 0.807, 0.808, 0.809, 0.811, 0.812, 0.813, 0.814, 0.815, 0.816, 0.817, 0.818, 0.819};
+            // }
+            // else{
+            //     orderParameter_clusterSizeDist = {0.811, 0.812, 0.813, 0.814, 0.815, 0.816, 0.817, 0.818, 0.819, 0.821, 0.822, 0.823, 0.824, 0.825, 0.826, 0.827, 0.828, 0.829};
+            // }
+            if (t_networkSize <= 10000){
+                orderParameter_clusterSizeDist = {0.75, 0.755, 0.76, 0.765, 0.77, 0.775, 0.78, 0.785};
             }
         }
         else if (t_acceptanceThreshold == 0.6){
-            orderParameter_clusterSizeDist = {0.01, 0.05, 0.1, 0.15, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.72, 0.74, 0.76, 0.78, 0.8, 0.82, 0.84, 0.9};
-            orderParameter_clusterSizeDist = {0.65, 0.61, 0.62, 0.63, 0.64, 0.65, 0.66, 0.67, 0.675, 0.68, 0.685, 0.69, 0.695, 0.705, 0.71};
+            // orderParameter_clusterSizeDist = {0.01, 0.05, 0.1, 0.15, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.72, 0.74, 0.76, 0.78, 0.8, 0.82, 0.84, 0.9};
+            // orderParameter_clusterSizeDist = {0.61, 0.62, 0.63, 0.64, 0.65, 0.66, 0.67, 0.675, 0.68, 0.685, 0.69, 0.695, 0.705, 0.71};
+            if (t_networkSize >= 20000){
+                orderParameter_clusterSizeDist = {0.715, 0.725, 0.73, 0.735, 0.745, 0.750, 0.755};
+            }
         }
         else if (t_acceptanceThreshold == 0.7){
-            orderParameter_clusterSizeDist = {0.01, 0.05, 0.1, 0.15, 0.2, 0.3, 0.4, 0.5, 0.6, 0.65, 0.67, 0.69, 0.7, 0.71, 0.73, 0.8, 0.9};
-            orderParameter_clusterSizeDist = {0.55, 0.56, 0.565, 0.57, 0.575, 0.58, 0.585, 0.59, 0.595, 0.605, 0.61, 0.615, 0.62, 0.625, 0.63, 0.64};
+            // orderParameter_clusterSizeDist = {0.01, 0.05, 0.1, 0.15, 0.2, 0.3, 0.4, 0.5, 0.6, 0.65, 0.67, 0.69, 0.7, 0.71, 0.73, 0.8, 0.9};
+            // orderParameter_clusterSizeDist = {0.55, 0.56, 0.565, 0.57, 0.575, 0.58, 0.585, 0.59, 0.595, 0.605, 0.61, 0.615, 0.62, 0.625, 0.63, 0.64};
+            if (t_networkSize >= 40000){
+                orderParameter_clusterSizeDist = {0.635, 0.645, 0.655, 0.660, 0.665};
+            }
         }
         else if (t_acceptanceThreshold == 0.8){
-            orderParameter_clusterSizeDist = {0.01, 0.05, 0.1, 0.15, 0.2, 0.3, 0.4, 0.5, 0.52, 0.54, 0.56, 0.58, 0.6, 0.62, 0.7, 0.8, 0.9};
-            orderParameter_clusterSizeDist = {0.35, 0.36, 0.365, 0.37, 0.375, 0.38, 0.385, 0.39, 0.395, 0.41, 0.415, 0.42, 0.425, 0.43, 0.435, 0.44, 0.45};
+            // orderParameter_clusterSizeDist = {0.01, 0.05, 0.1, 0.15, 0.2, 0.3, 0.4, 0.5, 0.52, 0.54, 0.56, 0.58, 0.6, 0.62, 0.7, 0.8, 0.9};
+            // orderParameter_clusterSizeDist = {0.35, 0.36, 0.365, 0.37, 0.375, 0.38, 0.385, 0.39, 0.395, 0.41, 0.415, 0.42, 0.425, 0.43, 0.435, 0.44, 0.45};
+            if (t_networkSize == 20000){
+                orderParameter_clusterSizeDist = {0.445, 0.455, 0.460, 0.465, 0.470, 0.475, 0.480, 0.485, 0.490, 0.495};
+            }
+            else if (t_networkSize == 40000){
+                orderParameter_clusterSizeDist = {0.455, 0.460, 0.465, 0.470, 0.475, 0.480, 0.485, 0.490, 0.495, 0.505, 0.510, 0.515};
+            }
+            else if (t_networkSize == 80000 || t_networkSize == 160000){
+                orderParameter_clusterSizeDist = {0.505, 0.510, 0.515, 0.525, 0.530, 0.535};
+            }
+            else if (t_networkSize >= 320000){
+                orderParameter_clusterSizeDist = {0.525, 0.530, 0.535, 0.545, 0.550, 0.555};
+            }
         }
         else if (t_acceptanceThreshold == 0.9){
-            orderParameter_clusterSizeDist = {0.01, 0.05, 0.1, 0.15, 0.2, 0.3, 0.36, 0.38, 0.4, 0.42, 0.44, 0.46, 0.5, 0.6, 0.7, 0.8, 0.9};
-            orderParameter_clusterSizeDist = {0.16, 0.17, 0.175, 0.18, 0.185, 0.19, 0.195, 0.205, 0.21, 0.215, 0.22, 0.225, 0.23, 0.235, 0.24, 0.25};
-        }
-        else if (t_acceptanceThreshold == 1.0){
-            orderParameter_clusterSizeDist = {0.01, 0.05, 0.1, 0.15, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9};
+            // orderParameter_clusterSizeDist = {0.01, 0.05, 0.1, 0.15, 0.2, 0.3, 0.36, 0.38, 0.4, 0.42, 0.44, 0.46, 0.5, 0.6, 0.7, 0.8, 0.9};
+            // orderParameter_clusterSizeDist = {0.16, 0.17, 0.175, 0.18, 0.185, 0.19, 0.195, 0.205, 0.21, 0.215, 0.22, 0.225, 0.23, 0.235, 0.24, 0.25};
+            if (t_networkSize == 20000 || t_networkSize == 40000){
+                orderParameter_clusterSizeDist = {0.255, 0.260, 0.265, 0.270, 0.275, 0.280, 0.285, 0.290, 0.295, 0.305, 0.310, 0.315, 0.320, 0.325, 0.330, 0.335, 0.340, 0.345, 0.350, 0.355};
+            }
+            else if (t_networkSize == 80000){
+                orderParameter_clusterSizeDist = {0.305, 0.310, 0.315, 0.320, 0.325, 0.330, 0.335, 0.340, 0.345, 0.350, 0.355, 0.365, 0.370, 0.375};
+            }
+            else if (t_networkSize >= 160000){
+                orderParameter_clusterSizeDist = {0.365, 0.370, 0.375, 0.385, 0.390, 0.395};
+            }
         }
         else{
             std::cout << "Not defined acceptance rate\n";
@@ -147,54 +175,28 @@ namespace mBFW::parameters{
         return time_orderParameterDist;
     }
 
-    //* Read t_a,m_a from "t_a.txt" and set t_a,m_a
-    const std::tuple<double, double> set_discontinousJump(const int& t_networkSize, const double& t_acceptanceThreshold){
-        double t_a = 0.0;
-        double m_a = 0.0;
-        std::ifstream t_aFile(rootPath + "t_a.txt");
+    //* Read t_a,m_a,t_c_var,m_c_csd and set
+    const std::tuple<double, double, double, double> set_points(const int& t_networkSize, const double& t_acceptanceThreshold){
+        double t_a, m_a, t_c, m_c;
+        std::ifstream readFile(rootPath + "points/" + fileName::base(t_networkSize, t_acceptanceThreshold) + ".txt");
         std::string line;
-        while (getline(t_aFile, line)){
-            //* Find line for input network size and acceptance threshold
-            if (line.find(fileName::base(t_networkSize, t_acceptanceThreshold)) != line.npos){
-                const int t_loc = line.find("t_a");
-                const int m_loc = line.find("m_a");
-                const int length = m_loc-t_loc-6;
-
-                t_a = std::stod(line.substr(t_loc+4, length));
-                m_a = std::stod(line.substr(m_loc+4));
+        while (getline(readFile, line)){
+            //* Find line for each points
+            if (line.find("t_a") != line.npos){
+                t_a = std::stod(line.substr(line.find(": ") + 2));
+            }
+            else if (line.find("m_a") != line.npos){
+                m_a = std::stod(line.substr(line.find(": ") + 2));
+            }
+            else if (line.find("t_c_var") != line.npos){
+                t_c = std::stod(line.substr(line.find(": ") + 2));
+            }
+            else if (line.find("m_c_csd") != line.npos){
+                m_c = std::stod(line.substr(line.find(": ") + 2));
             }
         }
-        if (!t_a){
-            std::cout << "Can't find t_a\n";
-        }
-        return std::make_tuple(t_a, m_a);
+        return std::make_tuple(t_a, m_a, t_c, m_c);
     }
-
-    //* Read t_c,m_c from "t_c.txt" and set t_c,m_c. Defined as order parameter variance
-    const std::tuple<double, double> set_critical(const int& t_networkSize, const double& t_acceptanceThreshold){
-        double t_c = 0.0;
-        double m_c = 0.0;
-        std::ifstream t_cFile(rootPath + "t_c.txt");
-        std::string line;
-        while (getline(t_cFile, line)){
-            //* find line for input network size and acceptance threshold with order parameter variance
-            if (line.find(fileName::base(t_networkSize, t_acceptanceThreshold) + "\tt_c_var") != line.npos){
-                const int t_loc = line.find("t_c_var");
-                const int m_loc = line.find("m_c");
-                const int length = m_loc-t_loc-10;
-
-                t_c = std::stod(line.substr(t_loc+8, length));
-                m_c = std::stod(line.substr(m_loc+4));
-            }
-        }
-        if (!t_c){
-            std::cout << "Can't find t_c\n";
-        }
-        return std::make_tuple(t_c, m_c);
-    }
-
-
-
 
 
     // std::tuple<double, double, std::set<double>, std::set<double>> pre_defined(const int&t_networkSize, const double& t_acceptanceThreshold){

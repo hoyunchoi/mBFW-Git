@@ -23,14 +23,12 @@ relativePathList["orderParameter_trial"] = "/average/"
 relativePathList["orderParameterDist"] = "/linBin/"
 relativePathList["orderParameterVariance"] = "/average/"
 relativePathList["orderParameterVariance_trial"] = "/average/"
-
-
+relativePathList["points"] = "/"
 
 rootPath = "../data/mBFW_hybrid/"
 absolutePathList = {}
 for observable, relativePath in relativePathList.items():
     absolutePathList[observable] = rootPath + observable + relativePath
-
 
 #* CSV Reader
 def readCSV(t_fileName):
@@ -64,6 +62,42 @@ def extractRepeater(t_type, t_networkSize, t_acceptanceThreshold):
         repeaterList.add(float(file[file.find(target)+len(target) : file.find(".txt")]))
     return repeaterList
 
+#* Read various points
+def readPoint(t_type, t_networkSize, t_acceptanceThreshold):
+    with open(absolutePathList["points"] + NG(t_networkSize, t_acceptanceThreshold)[:-1] + ".txt") as file:
+        point = 0
+        for line in file.readlines():
+            if t_type in line:
+                point = float(line[line.find(": ")+2 : ])
+    return point
+
+def readPoints(t_networkSize, t_acceptanceThreshold):
+    points = {}
+    with open(absolutePathList["points"] + NG(t_networkSize, t_acceptanceThreshold)[:-1] + ".txt") as file:
+        content = file.readlines()
+        for line in content:
+            if "t_a" in line:
+                points["t_a"] = float(line[line.find(": ")+2 : ])
+            elif "m_a" in line:
+                points["m_a"] = float(line[line.find(": ")+2 : ])
+            elif "t_inflection" in line:
+                points["t_inflection"] = float(line[line.find(": ")+2 : ])
+            elif "m_inflection" in line:
+                points["m_inflection"] = float(line[line.find(": ")+2 : ])
+            elif "t_c_var" in line:
+                points["t_c_var"] = float(line[line.find(": ")+2 : ])
+            elif "m_c_var" in line:
+                points["m_c_var"] = float(line[line.find(": ")+2 : ])
+            elif "t_c_mcs" in line:
+                points["t_c_mcs"] = float(line[line.find(": ")+2 : ])
+            elif "m_c_mcs" in line:
+                points["m_c_mcs"] = float(line[line.find(": ")+2 : ])
+            elif "t_c_csd" in line:
+                points["t_c_csd"] = float(line[line.find(": ")+2 : ])
+            elif "m_c_csd" in line:
+                points["m_c_csd"] = float(line[line.find(": ")+2 : ])
+    return points
+
 #* Read Observables
 def read(t_type, t_networkSize, t_acceptanceThreshold, t_reapeater=None):
     #* Read time-accumulated distributions
@@ -83,45 +117,6 @@ def read(t_type, t_networkSize, t_acceptanceThreshold, t_reapeater=None):
         print("There is problem at reading " + t_type + " at N={:.1e}".format(t_networkSize) + ", G={:.1f}".format(t_acceptanceThreshold))
         return
     return readCSV(file[0])
-
-
-#* Read t_a
-def readt_a(t_networkSize, t_acceptanceThreshold):
-    fileName = rootPath + "t_a.txt"
-    target = "N{:.1e},G{:.1f}".format(t_networkSize, t_acceptanceThreshold)
-    with open(fileName) as file:
-        content = file.readlines()
-        for line in content:
-            if target in line:
-                line = line[line.find("inflection: ")+12 : ]
-                inflectionTime = line[:line.find(",")]
-                inflectionOP = line[line.find(",")+1 : line.find("\t")]
-                line = line[line.find("\t") : ]
-                t_a = line[line.find("t_a:")+4 : line.find(",")]
-                m_a = line[line.find("m_a:")+4 :]
-    return float(inflectionTime), float(inflectionOP), float(t_a), float(m_a)
-
-#* Read t_c
-def readt_c(t_networkSize, t_acceptanceThreshold):
-    fileName = rootPath + "t_c.txt"
-    target = "N{:.1e},G{:.1f}".format(t_networkSize, t_acceptanceThreshold)
-    t_c_var = 0
-    m_c_var = 0
-    t_c_mcs = 0
-    m_c_mcs = 0
-
-    with open(fileName) as file:
-        content = file.readlines()
-        for line in content:
-            if target in line:
-                line = line[line.find("\t"):]
-                if "var" in line:
-                    t_c_var = line[line.find("t_c_var:")+8 : line.find(",")]
-                    m_c_var = line[line.find("m_c:")+4 : -1]
-                elif "mcs" in line:
-                    t_c_mcs = line[line.find("t_c_mcs:")+8 : line.find(",")]
-                    m_c_mcs = line[line.find("m_c:")+4 : -1]
-    return float(t_c_var), float(m_c_var), float(t_c_mcs), float(m_c_mcs)
 
 if __name__=="__main__":
     print("This is a module readData.py")
