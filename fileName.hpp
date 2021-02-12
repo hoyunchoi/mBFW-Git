@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../library-Git/stringFormat.hpp"
+#include "../library/stringFormat.hpp"
 
 namespace mBFW{
     //* File name conventions for storing data of mBFW project

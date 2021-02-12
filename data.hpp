@@ -7,13 +7,15 @@
 #include <iomanip>
 #include <algorithm>
 #include <set>
+#include <tuple>
 #include <cstdio>
 #include <filesystem>
 
-#include "../library-Git/CSV.hpp"
-#include "../library-Git/linearAlgebra.hpp"
+#include "../library/CSV.hpp"
+#include "../library/linearAlgebra.hpp"
 
 #include "fileName.hpp"
+#include "parameters.hpp"
 
 namespace mBFW::data{
     using namespace linearAlgebra;
@@ -67,14 +69,14 @@ namespace mBFW::data{
 
     //* Find target file at input baseDirectory
     const std::set<std::string> findTargetFileNameList(const std::string& t_directory, const std::string& t_target){
-        std::set<std::string> targetFileNameList;
+        std::set<std::string> baseFileNameList;
         for (const auto& file : fs::directory_iterator(t_directory)){
             const std::string fileName = file.path().filename();
             if (!fileName.find(t_target)){
-                targetFileNameList.insert(fileName);
+                baseFileNameList.insert(fileName);
             }
         }
-        return targetFileNameList;
+        return baseFileNameList;
     }
 
     //* Extract Ensemble Size from file name
@@ -130,8 +132,8 @@ namespace mBFW::data{
         std::vector<double> value, difference;
         value.reserve(min.size()-1); difference.reserve(min.size()-1);
         for (int i=0; i<min.size()-1; ++i){
-            value.emplace_back(std::sqrt(min[i]*min[i+1]));
-            difference.emplace_back(min[i+1]-min[i]);
+            value.emplace_back(std::sqrt(min[i] * min[i+1]));
+            difference.emplace_back(min[i+1] - min[i]);
         }
 
         //* Bin the data
@@ -140,6 +142,31 @@ namespace mBFW::data{
             for (unsigned j=0; j<value.size(); ++j){
                 if (i < min[j+1]){
                     binned[value[j]] += t_raw[i] / difference[j];
+                    break;
+                }
+            }
+        }
+        return binned;
+    }
+
+    //* Double Log Bin
+    std::map<double, double> doubleLogBin(const std::map<double, double>& t_raw){
+        //* Setup values for double log binning
+        const std::vector<double> exponentList = arange(-10, 0, logBinDelta);
+        const std::vector<double> min = elementPow(10.0, exponentList);
+        std::vector<double> value, difference;
+        value.reserve(min.size()-1); difference.reserve(min.size()-1);
+        for (int i=0; i<min.size()-1; ++i){
+            value.emplace_back(std::sqrt(min[i] * min[i+1]));
+            difference.emplace_back(min[i+1] - min[i]);
+        }
+
+        //* Bind the data
+        std::map<double, double> binned;
+        for (auto it=t_raw.begin(); it!=t_raw.end(); ++it){
+            for (int i=0; i<value.size(); ++i){
+                if (it->first < min[i+1]){
+                    binned[value[i]] += it->second / difference[i];
                     break;
                 }
             }
@@ -170,351 +197,14 @@ namespace mBFW::data{
         return binned;
     }
 
-    //* ----------------------------------------------------- Process for each observables --------------------------------------------------------
-    //* Process (Trial)Time-X
-    //! Order Parameter (Trial), Mean cluster Size (Trial), Order Parameter Variance (Trial), Inter Event Time
-    std::vector<double> time_X(const std::string& t_type){
-        //* Define Directories
-        const std::string baseDirectory = rootPath + t_type + "/";
-        const std::string averageDirectory = defineAdditionalDirectory(baseDirectory, "average");
-
-        //* Find target files at base directory and average directory according to system size and acceptance threshold
-        const std::set<std::string> targetFileNameList = findTargetFileNameList(baseDirectory, baseName);
-        const std::set<std::string> deleteFileNameList = findTargetFileNameList(averageDirectory, baseName);
-
-        //* Break the function if only one ensemble file exists
-        if (targetFileNameList.size() <= 1 && deleteFileNameList.size() <= 1){
-            std::vector<double> average;
-            CSV::read(averageDirectory + *deleteFileNameList.begin(), average);
-            std::cout << "Passing file " << averageDirectory + *deleteFileNameList.begin() << "\n";
-            return average;
-        }
-
-        //* Extract list of ensemble size from 'targe file list' and get total ensemble size
-        int totalEnsembleSize = 0;
-        for (const std::string& targetFileName : targetFileNameList){
-            totalEnsembleSize += extractEnsemble(targetFileName);
-        }
-
-        //* Define average vector corresponds to each observables
-        std::vector<double> average;
-        t_type.find("trial") != t_type.npos ? average.assign(maxTrialTime, 0.0) : average.assign(maxTime, 0.0);
-
-        //* Read target files and average them according to weight corresponding to each ensemble size
-        for (const std::string& targetFileName : targetFileNameList){
-            std::vector<double> temp;
-            CSV::read(baseDirectory + targetFileName, temp);
-            conditionallyDeleteFile(baseDirectory + targetFileName);
-            average += temp * extractEnsemble(targetFileName) / (double)totalEnsembleSize;
-        }
-
-        //* Write average data
-        std::cout << "Writing file " << baseDirectory + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize, 0) << "\n";
-        CSV::write(baseDirectory + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize, 0), average);
-
-        //* Trim averaged data
-        average.erase(std::remove_if(average.end()-average.size()/100, average.end(), [](const auto& value){return std::isnan(value) || value==0;}), average.end());
-        for (auto& e : average){
-            if (e<0){
-                e = 0;
-            }
-        }
-
-        //* Delete previous trimmed data
-        for (const std::string& deleteFileName : deleteFileNameList){
-            conditionallyDeleteFile(averageDirectory + deleteFileName);
-        }
-
-        //* Write trimmed data
-        std::cout << "Writing file " << averageDirectory + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize) << "\n";
-        CSV::write(averageDirectory + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize), average);
-
-        //* Return average value of observables
-        return average;
-    }
-
-    //* Process Distribution distinguished by discontinuous jump
-    //! Inter Event Time Distribution (time, op), Delta Upper Bound Distribution (time, op)
-    void dist(const std::string& t_type = ""){
-        //* Define directories
-        const std::string baseDirectory = rootPath + t_type + "/";
-        const std::string logBinDirectory = defineAdditionalDirectory(baseDirectory, "logBin");
-
-        //* Find target files at base directory and logBin directory corresponding to input system size and acceptance threshold
-        const std::set<std::string> targetFileNameList = findTargetFileNameList(baseDirectory, baseName);
-        const std::set<std::string> deleteFileNameList = findTargetFileNameList(logBinDirectory, baseName);
-
-        //* Break the function if only one ensemble file exists
-        if (targetFileNameList.size() <= 1 && deleteFileNameList.size() <= 1){
-            std::cout << "Passing file " << logBinDirectory + *deleteFileNameList.begin() << "\n";
-            return;
-        }
-
-        //* Find Ensemble Size of each target files and total ensemble size
-        int totalEnsembleSize = 0;
-        for (const std::string& targetFileName : targetFileNameList){
-            totalEnsembleSize += extractEnsemble(targetFileName);
-        }
-
-        //* Read target files and average them according to weight corresponding to each ensemble size
-        std::map<int, double> average;
-        for (const std::string& targetFileName : targetFileNameList){
-            std::map<int, double> temp;
-            CSV::read(baseDirectory + targetFileName, temp);
-            conditionallyDeleteFile(baseDirectory + targetFileName);
-            for (auto it=temp.begin(); it!= temp.end(); ++it){
-                average[it->first] += it->second * extractEnsemble(targetFileName) / (double)totalEnsembleSize;
-            }
-        }
-
-        //* Normalize averaged data
-        average /= accumulate(average);
-
-        //* Write averaged data
-        std::cout << "Writing file " << baseDirectory + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize, 0) << "\n";
-        CSV::write(baseDirectory + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize, 0), average);
-
-        //* Log Binning data
-        std::map<double, double> binned = intLogBin(average);
-        binned /= accumulate(binned);
-
-        //* Delete previous log binned data
-        for (const std::string fileName : deleteFileNameList){
-            conditionallyDeleteFile(logBinDirectory + fileName);
-        }
-
-        //* Write log binned data
-        std::cout << "Writing file " << logBinDirectory + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize) << "\n";
-        CSV::write(logBinDirectory + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize), binned);
-
-        //* void return
-        return;
-    }
-
-    //* Process age distribution
-    //! Age Distribution (time, op)
-    void ageDist(const std::string& t_type = ""){
-        for (const std::string& state : states){
-            //* Define directories
-            const std::string baseDirectory = rootPath + "ageDist_" + t_type + "/" + state + "/";
-            const std::string logBinDirectory = defineAdditionalDirectory(baseDirectory, "logBin");
-
-            //* Find target files at base directory and logBin directory corresponding to input system size and acceptance threshold
-            std::set<std::string> targetFileNameList = findTargetFileNameList(baseDirectory, baseName);
-            std::set<std::string> deleteFileNameList = findTargetFileNameList(logBinDirectory, baseName);
-
-            //* Break the function if only one ensemble file exists
-            if (targetFileNameList.size() <=1 && deleteFileNameList.size() <= 1){
-                std::cout << "Passing file " << logBinDirectory + *deleteFileNameList.begin() << "\n";
-                continue;
-            }
-
-            //* Find Ensemble Size of each target files and total ensemble size
-            int totalEnsembleSize = 0;
-            for (const std::string& targetFileName : targetFileNameList){
-                totalEnsembleSize += extractEnsemble(targetFileName);
-            }
-
-            //* Read target files and average them according to weight corresponding to each ensemble size
-            std::vector<double> average;
-            for (const std::string& targetFileName : targetFileNameList){
-                std::vector<double> temp;
-                CSV::read(baseDirectory + targetFileName, temp);
-                conditionallyDeleteFile(baseDirectory + targetFileName);
-                average += temp * extractEnsemble(targetFileName) / (double)totalEnsembleSize;
-            }
-
-            //* Normalize averaged data
-            average /= std::accumulate(average.begin(), average.end(), 0.0);
-
-            //* Write averaged data
-            std::cout << "Writing file " << baseDirectory + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize, 0) << "\n";
-            CSV::write(baseDirectory + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize, 0), average);
-
-            //* Log Binning data
-            std::map<double, double> binned = intLogBin(average);
-            binned /= accumulate(binned);
-
-            //* Delete previous log binned data
-            for (const std::string fileName : deleteFileNameList){
-                conditionallyDeleteFile(logBinDirectory + fileName);
-            }
-
-            //* Write log binned data
-            std::cout << "Writing file " << logBinDirectory + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize) << "\n";
-            CSV::write(logBinDirectory + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize), binned);
-
-            //* void return
-            return;
-        }
-    }
-
-    //* Process cluster size distribution
-    //! Cluster Size Distribution (exact, time)
-    void clustersizeDist(const std::string& t_type = ""){
-        //* Define directories
-        const std::string baseDirectory = rootPath + "clusterSizeDist" + t_type + "/";
-        const std::string logBinDirectory = defineAdditionalDirectory(baseDirectory, "logBin");
-
-        //* Find target files at base directory and logBin directory corresponding to input system size and acceptance threshold
-        std::set<std::string> targetFileNameList = findTargetFileNameList(baseDirectory, baseName);
-        std::set<std::string> deleteFileNameList = findTargetFileNameList(logBinDirectory, baseName);
-
-        //* Decide if the cluster size distribution is accumulated by order parameter/time
-        std::string standard;
-        t_type.find("time") != t_type.npos ? standard = "T" : standard = "OP";
-
-        //* Extract list of standard value = repeater from target file name list
-        std::set<double> repeaterList = extractRepeaterList(targetFileNameList, standard);
-
-        //* Process average and log binning for every element of repeat list
-        for (const double& repeater : repeaterList){
-            //* Find target files at base directory and logBin directory corresponding to repeater (order parameter/time)
-            std::set<std::string> targetFileNameList_repeater;
-            std::set<std::string> deleteFileNameList_repeater;
-            int totalEnsembleSize = 0;
-            for (const std::string& targetFileName : targetFileNameList){
-                if (targetFileName.find(standard + to_stringWithPrecision(repeater, 4)) != targetFileName.npos){
-                    totalEnsembleSize += extractEnsemble(targetFileName);
-                    targetFileNameList_repeater.insert(targetFileName);
-                }
-            }
-            for (const std::string& fileName : deleteFileNameList){
-                if (fileName.find(standard + to_stringWithPrecision(repeater, 4)) != fileName.npos){
-                    deleteFileNameList_repeater.insert(fileName);
-                }
-            }
-            //* Break the reapeater if only one ensemble file exists
-            if (targetFileNameList_repeater.size() <= 1 && deleteFileNameList_repeater.size() <= 1){
-                std::cout << "Passing file " << logBinDirectory + *deleteFileNameList_repeater.begin() << "\n";
-                continue;
-            }
-
-            //* Read target files and average them according to weight corresponding to each ensemble size
-            std::map<int, double> average;
-            for (const std::string targetFileName : targetFileNameList_repeater){
-                targetFileNameList.erase(targetFileName);
-                std::map<int, double> temp;
-                CSV::read(baseDirectory + targetFileName, temp);
-                conditionallyDeleteFile(baseDirectory + targetFileName);
-                for (auto it = temp.begin(); it!=temp.end(); ++it){
-                    average[it->first] += it->second * extractEnsemble(targetFileName) / (double)totalEnsembleSize;
-                }
-            }
-
-            //* Normalize averaged data
-            average /= accumulate(average);
-
-            //* Log Binning data
-            std::map<double, double> binned = intLogBin(average);
-            binned /= accumulate(binned);
-
-            //* Delete previous log binned data
-            for (const std::string& fileName : deleteFileNameList_repeater){
-                conditionallyDeleteFile(logBinDirectory + fileName);
-                deleteFileNameList.erase(fileName);
-            }
-
-            //* Write averaged data and write log binned data
-            if (standard == "OP"){
-                std::cout << "Writing file " << baseDirectory + fileName::NGEOP(networkSize, acceptanceThreshold, totalEnsembleSize, repeater, 0) << "\n";
-                CSV::write(baseDirectory + fileName::NGEOP(networkSize, acceptanceThreshold, totalEnsembleSize, repeater, 0), average);
-                std::cout << "Writing file " << logBinDirectory + fileName::NGEOP(networkSize, acceptanceThreshold, totalEnsembleSize, repeater) << "\n";
-                CSV::write(logBinDirectory + fileName::NGEOP(networkSize, acceptanceThreshold, totalEnsembleSize, repeater), binned);
-            }
-            else{
-                std::cout << "Writing file " << baseDirectory + fileName::NGET(networkSize, acceptanceThreshold, totalEnsembleSize, repeater, 0) << "\n";
-                CSV::write(baseDirectory + fileName::NGET(networkSize, acceptanceThreshold, totalEnsembleSize, repeater, 0), average);
-                std::cout << "Writing file " << logBinDirectory + fileName::NGET(networkSize, acceptanceThreshold, totalEnsembleSize, repeater) << "\n";
-                CSV::write(logBinDirectory + fileName::NGET(networkSize, acceptanceThreshold, totalEnsembleSize, repeater), binned);
-            }
-        }
-
-        //* void return
-        return;
-    }
-
-    void opd(){
-        //* Define directories
-        const std::string baseDirectory = rootPath + "orderParameterDist/";
-        const std::string linBinDirectory = defineAdditionalDirectory(baseDirectory, "linBin");
-
-        //* Find target files at base directory and logBin directory corresponding to input system size and acceptance threshold
-        std::set<std::string> targetFileNameList = findTargetFileNameList(baseDirectory, baseName);
-        std::set<std::string> deleteFileNameList = findTargetFileNameList(linBinDirectory, baseName);
-
-        //* Extract list of standard value = repeater from target file name list
-        std::set<double> repeaterList = extractRepeaterList(targetFileNameList, "T");
-
-        //* Process average and log binning for every element of repeat list
-        for (const double& repeater : repeaterList){
-            //* Find target files at base directory and linBin directory corresponding to repeater (time)
-            std::set<std::string> targetFileNameList_repeater;
-            std::set<std::string> deleteFileNameList_repeater;
-            int totalEnsembleSize = 0;
-            for (const std::string& targetFileName : targetFileNameList){
-                if (targetFileName.find("T" + to_stringWithPrecision(repeater, 4)) != targetFileName.npos){
-                    totalEnsembleSize += extractEnsemble(targetFileName);
-                    targetFileNameList_repeater.insert(targetFileName);
-                }
-            }
-            for (const std::string& fileName : deleteFileNameList){
-                if (fileName.find("T" + to_stringWithPrecision(repeater, 4)) != fileName.npos){
-                    deleteFileNameList_repeater.insert(fileName);
-                }
-            }
-
-            //* Break the reapeater if only one ensemble file exists
-            if (targetFileNameList_repeater.size() <= 1 && deleteFileNameList_repeater.size() <= 1){
-                std::cout << "Passing file " << linBinDirectory + *deleteFileNameList_repeater.begin() << "\n";
-                continue;
-            }
-
-            //* Read target files and average them according to weight corresponding to each ensemble size
-            std::map<double, double> average;
-            for (const std::string targetFileName : targetFileNameList_repeater){
-                targetFileNameList.erase(targetFileName);
-                std::map<double, double> temp;
-                CSV::read(baseDirectory + targetFileName, temp);
-                conditionallyDeleteFile(baseDirectory + targetFileName);
-                for (auto it = temp.begin(); it != temp.end(); ++it){
-                    average[it->first] += it->second * extractEnsemble(targetFileName) / (double)totalEnsembleSize;
-                }
-            }
-
-            //* Normalize averaged data
-            average /= accumulate(average);
-
-            //* Linear Binning data
-            std::map<double, double> binned = doubleLinBin(average);
-            binned /= accumulate(binned);
-
-            //* Delete previous lin binned data
-            for (const std::string& fileName : deleteFileNameList_repeater){
-                conditionallyDeleteFile(linBinDirectory + fileName);
-                deleteFileNameList.erase(fileName);
-            }
-
-            //* Write averaged data and write log binned data
-            std::cout << "Writing file " << baseDirectory + fileName::NGET(networkSize, acceptanceThreshold, totalEnsembleSize, repeater, 0) << "\n";
-            CSV::write(baseDirectory + fileName::NGET(networkSize, acceptanceThreshold, totalEnsembleSize, repeater, 0), average);
-            std::cout << "Writing file " << linBinDirectory + fileName::NGET(networkSize, acceptanceThreshold, totalEnsembleSize, repeater) << "\n";
-            CSV::write(linBinDirectory + fileName::NGET(networkSize, acceptanceThreshold, totalEnsembleSize, repeater), binned);
-        }
-
-        //* void return
-        return;
-    }
-
     //* Find t_a which is intercept with t-axis of tangential line of order parameter curve at the inflection point (when slope is maximum)
     void findTa(const std::vector<double>& t_orderParameter){
         //* Smooth order parameter curve
         std::vector<double> smoothedOrderParameter(maxTime, 0.0);
-        for (int i=1; i<maxTime-1; ++i){
-            smoothedOrderParameter[i] = t_orderParameter[i] + t_orderParameter[i-1] + t_orderParameter[i+1];
-        }
-        smoothedOrderParameter /= 3;
         smoothedOrderParameter[0] = t_orderParameter[0];
+        for (int i=1; i<maxTime-1; ++i){
+            smoothedOrderParameter[i] = (t_orderParameter[i] + t_orderParameter[i-1] + t_orderParameter[i+1]) / 3.0;
+        }
         smoothedOrderParameter[maxTime-1] = t_orderParameter[maxTime-1];
 
         //* Find maximum slope  and infelection point
@@ -537,7 +227,7 @@ namespace mBFW::data{
 
         //* Save the data
         std::ofstream writeFile;
-        writeFile.open(rootPath + "points/" + fileName::base(netwokrSize, acceptanceThreshold) + ".txt", std::ios_base::app);
+        writeFile.open(rootPath + "points/" + fileName::base(networkSize, acceptanceThreshold) + ".txt", std::ios_base::app);
         writeFile << std::setprecision(15) << "t_a: " << t_a << "\n";
         writeFile << std::setprecision(15) << "m_a: " << m_a << "\n";
         writeFile << std::setprecision(15) << "t_inflection: " << inflectionPoint[0] << "\n";
@@ -545,30 +235,493 @@ namespace mBFW::data{
         writeFile.close();
     }
 
+    //* Log bin inter event time with t-t_c
+    void logBinIET(const std::vector<double>& t_interEventTime, const double& t_totalEnsembleSize){
+        //* Change index by t-t_c
+        std::map<double, double> raw;
+        double t_a, m_a, t_c, m_c;
+        std::tie(t_a, m_a, t_c, m_c) = mBFW::parameters::set_points(networkSize, acceptanceThreshold);
+        for (int t = (int)(t_c*networkSize)+1; t<networkSize; ++t){
+            raw[t/(networkSize) - t_c] = t_interEventTime[t];
+        }
+
+        //* Log Binning
+        std::map<double, double> binned = doubleLogBin(raw);
+
+        //* Check the number of files
+        const std::string additionalDirectory = defineAdditionalDirectory(rootPath + "interEventTime/", "logBin");
+        const std::set<std::string> additionalFileNameList = findTargetFileNameList(additionalDirectory, baseName);
+        if (additionalFileNameList.size() >= 2){
+            std::cout << "WARNING: More than two files at " << additionalDirectory << ", " << baseName << "\n";
+            exit(1);
+        }
+
+        //* Delete previous log binned data
+        for (const std::string fileName : additionalFileNameList){
+            conditionallyDeleteFile(additionalDirectory + fileName);
+        }
+
+        //* Write log binned data
+        std::cout << "Writing file " << additionalDirectory + fileName::NGE(networkSize, acceptanceThreshold, t_totalEnsembleSize) << "\n";
+        CSV::write(additionalDirectory + fileName::NGE(networkSize, acceptanceThreshold, t_totalEnsembleSize), binned);
+    }
+
+    //* ----------------------------------------------------- Process for each observables --------------------------------------------------------
+    //* Process (Trial)Time-X
+    //! Order Parameter (Trial), Mean cluster Size (Trial), Order Parameter Variance (Trial), Inter Event Time
+    void time_X(const std::string& t_type){
+        //* Define Directories
+        const std::string baseDirectory = rootPath + t_type + "/";
+        const std::string additionalDirectory = defineAdditionalDirectory(baseDirectory, "average");
+
+        //* Find target files at base directory and average directory according to system size and acceptance threshold
+        const std::set<std::string> baseFileNameList = findTargetFileNameList(baseDirectory, baseName);
+        const std::set<std::string> additionalFileNameList = findTargetFileNameList(additionalDirectory, baseName);
+
+        //* Check the number of files
+        if (baseFileNameList.size() == 0){
+            std::cout << "WARNING: No file at " << baseDirectory << ", " << baseName << "\n";
+            exit(1);
+        }
+        else if (additionalFileNameList.size() >= 2){
+            std::cout << "WARNING: More than two files at " << additionalDirectory << ", " << baseName << "\n";
+            exit(1);
+        }
+        else if (baseFileNameList.size() == 1){
+            std::cout << "Passing file " << additionalDirectory + *additionalFileNameList.begin() << "\n";
+            return;
+        }
+
+        //* Extract list of ensemble size from 'targe file list' and get total ensemble size
+        int totalEnsembleSize = 0;
+        for (const std::string& fileName : baseFileNameList){
+            totalEnsembleSize += extractEnsemble(fileName);
+        }
+
+        //* Define average vector corresponds to each observables
+        std::vector<double> average;
+        t_type.find("trial") != t_type.npos ? average.assign(maxTrialTime, 0.0) : average.assign(maxTime, 0.0);
+
+        //* Read target files and average them according to weight corresponding to each ensemble size
+        for (const std::string& fileName : baseFileNameList){
+            std::vector<double> temp;
+            CSV::read(baseDirectory + fileName, temp); conditionallyDeleteFile(baseDirectory + fileName);
+            const double ratio = extractEnsemble(fileName) / (double)totalEnsembleSize;
+            average += temp * ratio;
+        }
+
+        //* Write average data
+        std::cout << "Writing file " << baseDirectory + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize, 0) << "\n";
+        CSV::write(baseDirectory + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize, 0), average);
+
+        //* Trim averaged data
+        average.erase(std::remove_if(average.end()-average.size()/100, average.end(), [](const auto& value){return std::isnan(value) || value==0;}), average.end());
+        for (auto& e : average){
+            if (e<0){ e = 0; }
+        }
+
+        //* Delete previous trimmed data
+        for (const std::string& fileName : additionalFileNameList){
+            conditionallyDeleteFile(additionalDirectory + fileName);
+        }
+
+        //* Write trimmed data
+        std::cout << "Writing file " << additionalDirectory + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize) << "\n";
+        CSV::write(additionalDirectory + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize), average);
+
+        //* Find t_a for order parameter
+        if (t_type == "orderParameter"){
+            findTa(average);
+        }
+
+        //* Do log bin for inter event time
+        else if (t_type == "interEventTime"){
+            logBinIET(average, totalEnsembleSize);
+        }
+
+        //* void return
+        return;
+    }
+
+    //* Process Distribution distinguished by discontinuous jump
+    //! Inter Event Time Distribution (time, op), Delta Upper Bound Distribution (time, op)
+    void dist(const std::string& t_type = ""){
+        for (const std::string& state : states){
+            //* Define directories
+            const std::string baseDirectory = rootPath + t_type + "/" + state + "/";
+            const std::string additionalDirectory = defineAdditionalDirectory(baseDirectory, "logBin");
+
+            //* Find target files at base directory and logBin directory corresponding to input system size and acceptance threshold
+            const std::set<std::string> baseFileNameList = findTargetFileNameList(baseDirectory, baseName);
+            const std::set<std::string> additionalFileNameList = findTargetFileNameList(additionalDirectory, baseName);
+
+            //* Check the number of files
+            if (baseFileNameList.size() == 0){
+                std::cout << "WARNING: No file at " << baseDirectory << ", " << baseName << "\n";
+                exit(1);
+            }
+            else if (additionalFileNameList.size() >= 2){
+                std::cout << "WARNING: More than two files at " << additionalDirectory << ", " << baseName << "\n";
+                exit(1);
+            }
+            else if (baseFileNameList.size() == 1){
+                std::cout << "Passing file " << additionalDirectory + *additionalFileNameList.begin() << "\n";
+                continue;
+            }
+
+            //* Find Ensemble Size of each target files and total ensemble size
+            int totalEnsembleSize = 0;
+            for (const std::string& fileName : baseFileNameList){
+                totalEnsembleSize += extractEnsemble(fileName);
+            }
+
+            //* Read target files and average them according to weight corresponding to each ensemble size
+            std::map<int, double> average;
+            for (const std::string& fileName : baseFileNameList){
+                std::map<int, double> temp;
+                CSV::read(baseDirectory + fileName, temp); conditionallyDeleteFile(baseDirectory + fileName);
+                const double ratio = extractEnsemble(fileName) / (double)totalEnsembleSize;
+                for (auto it=temp.begin(); it!= temp.end(); ++it){
+                    average[it->first] += it->second * ratio;
+                }
+            }
+
+            //* Normalize averaged data
+            average /= accumulate(average);
+
+            //* Write averaged data
+            std::cout << "Writing file " << baseDirectory + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize, 0) << "\n";
+            CSV::write(baseDirectory + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize, 0), average);
+
+            //* Log Binning data
+            std::map<double, double> binned = intLogBin(average);
+            binned /= accumulate(binned);
+
+            //* Delete previous log binned data
+            for (const std::string fileName : additionalFileNameList){
+                conditionallyDeleteFile(additionalDirectory + fileName);
+            }
+
+            //* Write log binned data
+            std::cout << "Writing file " << additionalDirectory + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize) << "\n";
+            CSV::write(additionalDirectory + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize), binned);
+        }
+
+        //* void return
+        return;
+    }
+
+    //* Process age distribution
+    //! Age Distribution (time, op)
+    void ageDist(const std::string& t_type = ""){
+        for (const std::string& state : states){
+            //* Define directories
+            const std::string baseDirectory = rootPath + "ageDist_" + t_type + "/" + state + "/";
+            const std::string additionalDirectory = defineAdditionalDirectory(baseDirectory, "logBin");
+
+            //* Find target files at base directory and logBin directory corresponding to input system size and acceptance threshold
+            std::set<std::string> baseFileNameList = findTargetFileNameList(baseDirectory, baseName);
+            std::set<std::string> additionalFileNameList = findTargetFileNameList(additionalDirectory, baseName);
+
+            //* Check the number of files
+            if (baseFileNameList.size() == 0){
+                std::cout << "WARNING: No file at " << baseDirectory << ", " << baseName << "\n";
+                exit(1);
+            }
+            else if (additionalFileNameList.size() >= 2){
+                std::cout << "WARNING: More than two files at " << additionalDirectory << ", " << baseName << "\n";
+                exit(1);
+            }
+            else if (baseFileNameList.size() == 1){
+                std::cout << "Passing file " << additionalDirectory + *additionalFileNameList.begin() << "\n";
+                continue;
+            }
+
+            //* Find Ensemble Size of each target files and total ensemble size
+            int totalEnsembleSize = 0;
+            for (const std::string& fileName : baseFileNameList){
+                totalEnsembleSize += extractEnsemble(fileName);
+            }
+
+            //* Read target files and average them according to weight corresponding to each ensemble size
+            std::vector<double> average(maxTime, 0.0);
+            for (const std::string& fileName : baseFileNameList){
+                std::vector<double> temp;
+                CSV::read(baseDirectory + fileName, temp);
+                conditionallyDeleteFile(baseDirectory + fileName);
+                const double ratio = extractEnsemble(fileName) / (double)totalEnsembleSize;
+                average += temp * ratio;
+            }
+
+            //* Normalize averaged data
+            average /= std::accumulate(average.begin(), average.end(), 0.0);
+
+            //* Write averaged data
+            std::cout << "Writing file " << baseDirectory + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize, 0) << "\n";
+            CSV::write(baseDirectory + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize, 0), average);
+
+            //* Log Binning data
+            std::map<double, double> binned = intLogBin(average);
+            binned /= accumulate(binned);
+
+            //* Delete previous log binned data
+            for (const std::string fileName : additionalFileNameList){
+                conditionallyDeleteFile(additionalDirectory + fileName);
+            }
+
+            //* Write log binned data
+            std::cout << "Writing file " << additionalDirectory + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize) << "\n";
+            CSV::write(additionalDirectory + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize), binned);
+        }
+        //* void return
+        return;
+    }
+
+    //* Process cluster size distribution
+    //! Cluster Size Distribution (exact, time)
+    void clustersizeDist(const std::string& t_type = ""){
+        //* Define directories
+        const std::string baseDirectory = rootPath + "clusterSizeDist" + t_type + "/";
+        const std::string additionalDirectory = defineAdditionalDirectory(baseDirectory, "logBin");
+
+        //* Find target files at base directory and logBin directory corresponding to input system size and acceptance threshold
+        std::set<std::string> baseFileNameList = findTargetFileNameList(baseDirectory, baseName);
+        std::set<std::string> additionalFileNameList = findTargetFileNameList(additionalDirectory, baseName);
+
+        //* Decide if the cluster size distribution is accumulated by order parameter/time
+        std::string standard;
+        t_type.find("time") != t_type.npos ? standard = "T" : standard = "OP";
+
+        //* Extract list of standard value = repeater from target file name list
+        std::set<double> repeaterList = extractRepeaterList(baseFileNameList, standard);
+
+        //* Process average and log binning for every element of repeat list
+        for (const double& repeater : repeaterList){
+            //* Find target files at base directory and logBin directory corresponding to repeater (order parameter/time)
+            std::set<std::string> baseFileNameList_repeater;
+            std::set<std::string> additionalFileNameList_repeater;
+            int totalEnsembleSize = 0;
+            for (const std::string& fileName : baseFileNameList){
+                if (fileName.find(standard + to_stringWithPrecision(repeater, 4)) != fileName.npos){
+                    totalEnsembleSize += extractEnsemble(fileName);
+                    baseFileNameList_repeater.insert(fileName);
+                }
+            }
+            for (const std::string& fileName : additionalFileNameList){
+                if (fileName.find(standard + to_stringWithPrecision(repeater, 4)) != fileName.npos){
+                    additionalFileNameList_repeater.insert(fileName);
+                }
+            }
+
+            //* Check the number of files
+            if (baseFileNameList_repeater.size() == 0){
+                std::cout << "WARNING: No file at " << baseDirectory << ", " << baseName << "\n";
+                exit(1);
+            }
+            else if (additionalFileNameList_repeater.size() >= 2){
+                std::cout << "WARNING: More than two files at " << additionalDirectory << ", " << baseName << "\n";
+                exit(1);
+            }
+            else if (baseFileNameList_repeater.size() == 1){
+                std::cout << "Passing file " << additionalDirectory + *additionalFileNameList_repeater.begin() << "\n";
+                continue;
+            }
+
+            //* Read target files and average them according to weight corresponding to each ensemble size
+            std::map<int, double> average;
+            for (const std::string fileName : baseFileNameList_repeater){
+                baseFileNameList.erase(fileName);
+                std::map<int, double> temp;
+                CSV::read(baseDirectory + fileName, temp); conditionallyDeleteFile(baseDirectory + fileName);
+                const double ratio = extractEnsemble(fileName) / (double)totalEnsembleSize;
+                for (auto it = temp.begin(); it!=temp.end(); ++it){
+                    average[it->first] += it->second * ratio;
+                }
+            }
+
+            //* Normalize averaged data
+            average /= accumulate(average);
+
+            //* Log Binning data
+            std::map<double, double> binned = intLogBin(average);
+            binned /= accumulate(binned);
+
+            //* Delete previous log binned data
+            for (const std::string& fileName : additionalFileNameList_repeater){
+                conditionallyDeleteFile(additionalDirectory + fileName);
+                additionalFileNameList.erase(fileName);
+            }
+
+            //* Write averaged data and write log binned data
+            if (standard == "OP"){
+                std::cout << "Writing file " << baseDirectory + fileName::NGEOP(networkSize, acceptanceThreshold, totalEnsembleSize, repeater, 0) << "\n";
+                CSV::write(baseDirectory + fileName::NGEOP(networkSize, acceptanceThreshold, totalEnsembleSize, repeater, 0), average);
+                std::cout << "Writing file " << additionalDirectory + fileName::NGEOP(networkSize, acceptanceThreshold, totalEnsembleSize, repeater) << "\n";
+                CSV::write(additionalDirectory + fileName::NGEOP(networkSize, acceptanceThreshold, totalEnsembleSize, repeater), binned);
+            }
+            else{
+                std::cout << "Writing file " << baseDirectory + fileName::NGET(networkSize, acceptanceThreshold, totalEnsembleSize, repeater, 0) << "\n";
+                CSV::write(baseDirectory + fileName::NGET(networkSize, acceptanceThreshold, totalEnsembleSize, repeater, 0), average);
+                std::cout << "Writing file " << additionalDirectory + fileName::NGET(networkSize, acceptanceThreshold, totalEnsembleSize, repeater) << "\n";
+                CSV::write(additionalDirectory + fileName::NGET(networkSize, acceptanceThreshold, totalEnsembleSize, repeater), binned);
+            }
+        }
+
+        //* void return
+        return;
+    }
+
+    void opd(){
+        //* Define directories
+        const std::string baseDirectory = rootPath + "orderParameterDist/";
+        const std::string additionalDirectory = defineAdditionalDirectory(baseDirectory, "linBin");
+
+        //* Find target files at base directory and logBin directory corresponding to input system size and acceptance threshold
+        std::set<std::string> baseFileNameList = findTargetFileNameList(baseDirectory, baseName);
+        std::set<std::string> additionalFileNameList = findTargetFileNameList(additionalDirectory, baseName);
+
+        //* Extract list of standard value = repeater from target file name list
+        std::set<double> repeaterList = extractRepeaterList(baseFileNameList, "T");
+
+        //* Process average and log binning for every element of repeat list
+        for (const double& repeater : repeaterList){
+            //* Find target files at base directory and linBin directory corresponding to repeater (time)
+            std::set<std::string> baseFileNameList_repeater;
+            std::set<std::string> additionalFileNameList_repeater;
+            int totalEnsembleSize = 0;
+            for (const std::string& fileName : baseFileNameList){
+                if (fileName.find("T" + to_stringWithPrecision(repeater, 4)) != fileName.npos){
+                    totalEnsembleSize += extractEnsemble(fileName);
+                    baseFileNameList_repeater.insert(fileName);
+                }
+            }
+            for (const std::string& fileName : additionalFileNameList){
+                if (fileName.find("T" + to_stringWithPrecision(repeater, 4)) != fileName.npos){
+                    additionalFileNameList_repeater.insert(fileName);
+                }
+            }
+
+            //* Check the number of files
+            if (baseFileNameList_repeater.size() == 0){
+                std::cout << "WARNING: No file at " << baseDirectory << ", " << baseName << "\n";
+                exit(1);
+            }
+            else if (additionalFileNameList_repeater.size() >= 2){
+                std::cout << "WARNING: More than two files at " << additionalDirectory << ", " << baseName << "\n";
+                exit(1);
+            }
+            else if (baseFileNameList_repeater.size() == 1){
+                std::cout << "Passing file " << additionalDirectory + *additionalFileNameList_repeater.begin() << "\n";
+                continue;
+            }
+
+            //* Read target files and average them according to weight corresponding to each ensemble size
+            std::map<double, double> average;
+            for (const std::string fileName : baseFileNameList_repeater){
+                baseFileNameList.erase(fileName);
+                std::map<double, double> temp;
+                CSV::read(baseDirectory + fileName, temp); conditionallyDeleteFile(baseDirectory + fileName);
+                const double ratio = extractEnsemble(fileName) / (double)totalEnsembleSize;
+                for (auto it = temp.begin(); it != temp.end(); ++it){
+                    average[it->first] += it->second * ratio;
+                }
+            }
+
+            //* Normalize averaged data
+            average /= accumulate(average);
+
+            //* Linear Binning data
+            std::map<double, double> binned = doubleLinBin(average);
+            binned /= accumulate(binned);
+
+            //* Delete previous lin binned data
+            for (const std::string& fileName : additionalFileNameList_repeater){
+                conditionallyDeleteFile(additionalDirectory + fileName);
+                additionalFileNameList.erase(fileName);
+            }
+
+            //* Write averaged data and write log binned data
+            std::cout << "Writing file " << baseDirectory + fileName::NGET(networkSize, acceptanceThreshold, totalEnsembleSize, repeater, 0) << "\n";
+            CSV::write(baseDirectory + fileName::NGET(networkSize, acceptanceThreshold, totalEnsembleSize, repeater, 0), average);
+            std::cout << "Writing file " << additionalDirectory + fileName::NGET(networkSize, acceptanceThreshold, totalEnsembleSize, repeater) << "\n";
+            CSV::write(additionalDirectory + fileName::NGET(networkSize, acceptanceThreshold, totalEnsembleSize, repeater), binned);
+        }
+
+        //* void return
+        return;
+    }
+
+    void X_deltaAcceptance(const std::string& t_type){
+        for (const std::string& state : states){
+            //* Define directories
+            const std::string baseDirectory = rootPath + t_type + "/" + state + "/";
+            const std::string additionalDirectory = defineAdditionalDirectory(baseDirectory, "logBin");
+
+            //* Find target files at base directory and average directory according to system size and acceptance threshold
+            const std::set<std::string> baseFileNameList = findTargetFileNameList(baseDirectory, baseName);
+            const std::set<std::string> additionalFileNameList = findTargetFileNameList(additionalDirectory, baseName);
+
+            //* Check the number of files
+            if (baseFileNameList.size() == 0){
+                std::cout << "WARNING: No file at " << baseDirectory << ", " << baseName << "\n";
+                exit(1);
+            }
+            else if (additionalFileNameList.size() >= 2){
+                std::cout << "WARNING: More than two files at " << additionalDirectory << ", " << baseName << "\n";
+                exit(1);
+            }
+            else if (baseFileNameList.size() == 1){
+                std::cout << "Passing file " << additionalDirectory + *additionalFileNameList.begin() << "\n";
+                continue;
+            }
+
+            //* Extract list of ensemble size from 'targe file list' and get total ensemble size
+            int totalEnsembleSize = 0;
+            for (const std::string& fileName : baseFileNameList){
+                totalEnsembleSize += extractEnsemble(fileName);
+            }
+
+            //* Read target files and average them according to weight corresponding to each ensemble
+            std::map<int, double> average;
+            for (const std::string& fileName : baseFileNameList){
+                std::map<int, double> temp;
+                CSV::read(baseDirectory + fileName, temp); conditionallyDeleteFile(baseDirectory + fileName);
+                const double ratio = extractEnsemble(fileName) / (double)totalEnsembleSize;
+                for (auto it=temp.begin(); it!= temp.end(); ++it){
+                    average[it->first] += it->second * ratio;
+                }
+            }
+
+            //* Write averaged data
+            std::cout << "Writing file " << baseDirectory + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize, 0) << "\n";
+            CSV::write(baseDirectory + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize, 0), average);
+
+            //* Log Binning data
+            std::map<double, double> binned = intLogBin(average);
+
+            //* Delete previous log binned data
+            for (const std::string fileName : additionalFileNameList){
+                conditionallyDeleteFile(additionalDirectory + fileName);
+            }
+
+            //* Write log binned data
+            std::cout << "Writing file " << additionalDirectory + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize) << "\n";
+            CSV::write(additionalDirectory + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize), binned);
+        }
+
+        //* void return
+        return;
+
+    }
+
     //* ------------------------------------------------------------- Integration of each observables data process -----------------------------------------------------
     //* Run selected observables at check list
     void process(const std::map<std::string, bool>& t_checkList){
-        if (t_checkList.at("orderParameter")){
-            std::vector<double> orderParameter = time_X("orderParameter");
-            findTa(orderParameter);
+        if (t_checkList.at("ageDist_op")){
+            ageDist("op");
         }
-        if (t_checkList.at("orderParameter_trial")){
-            std::vector<double> orderParameter_trial = time_X("orderParameter_trial");
-        }
-        if (t_checkList.at("meanClusterSize")){
-            std::vector<double> meanClusterSize = time_X("meanClusterSize");
-        }
-        if (t_checkList.at("meanClusterSize_trial")){
-            std::vector<double> meanClusterSize_trial = time_X("meanClusterSize_trial");
-        }
-        if (t_checkList.at("interEventTime")){
-            std::vector<double> interEventTime = time_X("interEventTime");
-        }
-        if (t_checkList.at("orderParameterVariance")){
-            std::vector<double> orderParameterVariance = time_X("orderParameterVariance");
-        }
-        if (t_checkList.at("orderParameterVariance_trial")){
-            std::vector<double> orderParameterVariance_trial = time_X("orderParameterVariance_trial");
+        if (t_checkList.at("ageDist_time")){
+            ageDist("time");
         }
         if (t_checkList.at("clusterSizeDist")){
             clustersizeDist();
@@ -579,23 +732,47 @@ namespace mBFW::data{
         if (t_checkList.at("clusterSizeDist_time")){
             clustersizeDist("_time");
         }
-        if (t_checkList.at("interEventTimeDist_time")){
-            for (auto state : states){
-                dist("interEventTimeDist_time/" + state);
-            }
+        if (t_checkList.at("deltaUpperBound_deltaAcceptance")){
+            X_deltaAcceptance("deltaUpperBound_deltaAcceptance");
         }
-        if (t_checkList.at("ageDist_time")){
-            for (auto state : states){
-                dist("ageDist_time/" + state);
-            }
+        if (t_checkList.at("deltaUpperBoundDist_op")){
+            dist("deltaUpperBoundDist_op");
         }
         if (t_checkList.at("deltaUpperBoundDist_time")){
-            for (auto state : states){
-                dist("deltaUpperBoundDist_time/" + state);
-            }
+            dist("deltaUpperBoundDist_time");
+        }
+        if (t_checkList.at("interEventTime")){
+            time_X("interEventTime");
+        }
+        if (t_checkList.at("interEventTimeDist_op")){
+            dist("interEventTimeDist_op");
+        }
+        if (t_checkList.at("interEventTimeDist_time")){
+            dist("interEventTimeDist_time");
+        }
+        if (t_checkList.at("meanClusterSize")){
+            time_X("meanClusterSize");
+        }
+        if (t_checkList.at("meanClusterSize_trial")){
+            time_X("meanClusterSize_trial");
+        }
+        if (t_checkList.at("orderParameter")){
+            time_X("orderParameter");
+        }
+        if (t_checkList.at("orderParameter_trial")){
+            time_X("orderParameter_trial");
         }
         if (t_checkList.at("orderParameterDist")){
             opd();
+        }
+        if (t_checkList.at("orderParameterVariance")){
+            time_X("orderParameterVariance");
+        }
+        if (t_checkList.at("orderParameterVariance_trial")){
+            time_X("orderParameterVariance_trial");
+        }
+        if (t_checkList.at("upperBound_deltaAcceptance")){
+            X_deltaAcceptance("upperBound_deltaAcceptance");
         }
     }
 

@@ -22,21 +22,26 @@ int main(int argc, char *argv[]){
 
     //* Check list of each observables
     std::map<std::string, bool> checkList;
-    checkList["orderParameter"] = true;
-    checkList["orderParameter_trial"] = true;
-    checkList["meanClusterSize"] = true;
-    checkList["meanClusterSize_trial"] = true;
-    checkList["interEventTime"] = true;
-    checkList["orderParameterVariance"] = true;
-    checkList["orderParameterVariance_trial"] = true;
-    checkList["clusterSizeDist"] = true;
-    checkList["clusterSizeDist_exact"] = true;
-    checkList["clusterSizeDist_time"] = true;
-    checkList["interEventTimeDist_time"] =true;
+    checkList["ageDist_op"] = true;
     checkList["ageDist_time"] = true;
+    checkList["clusterSizeDist"] = true;
+    checkList["deltaUpperBound_deltaAcceptance"] = true;
+    checkList["deltaUpperBoundDist_op"] = true;
     checkList["deltaUpperBoundDist_time"] = true;
+    checkList["interEventTime"] = true;
+    checkList["interEventTimeDist_op"] =true;
+    checkList["interEventTimeDist_time"] =true;
+    checkList["meanClusterSize"] = true;
+    checkList["orderParameter"] = true;
     checkList["orderParameterDist"] = true;
+    checkList["orderParameterVariance"] = true;
+    checkList["upperBound_deltaAcceptance"] = true;
 
+    checkList["clusterSizeDist_exact"] = false;
+    checkList["clusterSizeDist_time"] = false;
+    checkList["meanClusterSize_trial"] = false;
+    checkList["orderParameter_trial"] = false;
+    checkList["orderParameterVariance_trial"] = false;
 
     //* Run data process
     auto start = std::chrono::system_clock::now();

@@ -9,10 +9,10 @@
 #include <functional>
 #include <filesystem>
 
-#include "../library-Git/linearAlgebra.hpp"
-#include "../library-Git/Networks.hpp"
-#include "../library-Git/CSV.hpp"
-#include "../library-Git/pcg_random.hpp"
+#include "../library/linearAlgebra.hpp"
+#include "../library/Networks.hpp"
+#include "../library/CSV.hpp"
+#include "../library/pcg_random.hpp"
 
 #include "parameters.hpp"
 #include "fileName.hpp"
@@ -152,7 +152,7 @@ namespace mBFW::generate{
         for (int ensemble=0; ensemble<ensembleSize; ++ensemble){
             //* Default values for one ensemble
             NZ_Network model(networkSize);
-            unsigned node1, node2, root1, root2;
+            int root1, root2;
             std::string currentState_time = "before";
             std::string currentState_op = "before";
             int size1, size2;
@@ -182,12 +182,9 @@ namespace mBFW::generate{
                 if (choosingNewNode){
                     //* Randomly choose new nodes
                     do {
-                        node1 = nodeDistribution(randomEngine);
-                        node2 = nodeDistribution(randomEngine);
-                        root1 = model.getRoot(node1);
-                        root2 = model.getRoot(node2);
+                        root1 = model.getRoot(nodeDistribution(randomEngine));
+                        root2 = model.getRoot(nodeDistribution(randomEngine));
                     } while(root1 == root2);
-
                     //* choose two clusters of each node
                     size1 = model.getClusterSize(root1);
                     size2 = model.getClusterSize(root2);
@@ -262,11 +259,10 @@ namespace mBFW::generate{
                         }
                     }
 
-
                     //* Order Parameter of network is changed <=> upper bound is changed
                     if (model.getDeltaMaximumClusterSize() && currentMaximumClusterSize > 2){
                         const int deltaMaximumClusterSize = model.getDeltaMaximumClusterSize();
-                        //* Check the state distringuished by order parameter
+                        //* Check the state distinguished by order parameter
                         if (currentOrderParameter < m_a){
                             currentState_op = "before";
                         }
@@ -305,7 +301,7 @@ namespace mBFW::generate{
 
                         //! Inter Event Time
                         {
-                            interEventTime[time] += time-eventTime;
+                            interEventTime[time] += (double)time-eventTime;
                             ++sampled_interEventTime[time];
                         }
 
@@ -342,7 +338,7 @@ namespace mBFW::generate{
                     choosingNewNode=false;
                 }//* End of Upper Bound change
 
-                //* Choosed link rejected
+                //* Chosen link rejected
                 else{
                     ++trialTime;
                     choosingNewNode=true;
@@ -517,7 +513,7 @@ namespace mBFW::generate{
             }
             for (int t=0; t<maxTime; ++t){
                 if (sampled_interEventTime[t]){
-                    interEventTime[t] /= sampled_interEventTime[t];
+                    interEventTime[t] /= (double)sampled_interEventTime[t];
                 }
             }
             CSV::write(interEventTimePath + fileName::NGE(networkSize, acceptanceThreshold, ensembleSize, coreNum), interEventTime);
@@ -561,16 +557,21 @@ namespace mBFW::generate{
                     fs::create_directories(ageDist_timePath);
                 }
                 const double tot_time = std::accumulate(ageDist_time[state].begin(), ageDist_time[state].end(), 0.0);
-                ageDist_time[state] /= tot_time;
-                CSV::write(ageDist_timePath + fileName::NGE(networkSize, acceptanceThreshold, ensembleSize, coreNum), ageDist_time[state]);
+                std::vector<double> temp(networkSize, 0.0);
+                for (int i=0; i<networkSize; ++i){
+                    temp[i] = ageDist_time[state][i] / tot_time;
+                }
+                CSV::write(ageDist_timePath + fileName::NGE(networkSize, acceptanceThreshold, ensembleSize, coreNum), temp);
 
                 const std::string ageDist_opPath = rootPath + "ageDist_op/" + state + "/";
                 if (!fs::exists(ageDist_opPath)){
                     fs::create_directories(ageDist_opPath);
                 }
                 const double tot_op = std::accumulate(ageDist_op[state].begin(), ageDist_op[state].end(), 0.0);
-                ageDist_op[state] /= tot_op;
-                CSV::write(ageDist_opPath + fileName::NGE(networkSize, acceptanceThreshold, ensembleSize, coreNum), ageDist_op[state]);
+                for (int i=0; i<networkSize; ++i){
+                    temp[i] = ageDist_time[state][i] / tot_time;
+                }
+                CSV::write(ageDist_opPath + fileName::NGE(networkSize, acceptanceThreshold, ensembleSize, coreNum), temp);
             }
         }
 
