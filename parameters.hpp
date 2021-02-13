@@ -12,7 +12,7 @@
 
 namespace mBFW::parameters{
     using namespace linearAlgebra;
-    const std::string rootPath = "../data/mBFW_hybrid/";
+    const std::string baseDirectory = "../data/mBFW/";
     const std::set<int> networkSizeList = {10000, 20000, 40000, 80000, 160000, 320000, 640000, 1280000, 2560000, 5120000, 10240000};
     const std::set<double> acceptanceThresholdList = {0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9};
 
@@ -178,7 +178,7 @@ namespace mBFW::parameters{
     //* Read t_a,m_a,t_c_var,m_c_csd and set
     const std::tuple<double, double, double, double> set_points(const int& t_networkSize, const double& t_acceptanceThreshold){
         double t_a, m_a, t_c, m_c;
-        std::ifstream readFile(rootPath + "points/" + fileName::base(t_networkSize, t_acceptanceThreshold) + ".txt");
+        std::ifstream readFile(baseDirectory + "points/" + fileName::base(t_networkSize, t_acceptanceThreshold) + ".txt");
         std::string line;
         while (getline(readFile, line)){
             //* Find line for each points
