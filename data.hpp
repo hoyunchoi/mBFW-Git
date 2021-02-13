@@ -20,7 +20,7 @@
 namespace mBFW::data{
     using namespace linearAlgebra;
     namespace fs = std::filesystem;
-    const std::string rootPath = "../data/mBFW_hybrid/";
+    const std::string rootPath = "../data/mBFW/";
 
     //*------------------------------------------- Declaration of varaibles used at mBFW::data ------------------------------------------------------
     const std::vector<std::string> states = {"before", "during", "after"};

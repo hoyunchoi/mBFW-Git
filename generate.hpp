@@ -18,7 +18,7 @@
 #include "fileName.hpp"
 
 namespace mBFW::generate{
-    const std::string rootPath = "../data/mBFW_hybrid/";
+    const std::string rootPath = "../data/mBFW/";
 
     //*--------------------------------------------Declaration of variables---------------------------------------------------------
     //* Declaration of variables used at mBFW::generate namespace
@@ -57,16 +57,15 @@ namespace mBFW::generate{
     //! clusterSizeDist[op]: Average distribution of cluster size when order parameter passes op
     //! clusterSizeDist_exact[op]: Average distribution of cluster size when order parameter is exactly op
     //! clusterSizeDist_time[time]: Average distribution of cluster size when time at specific time
-    std::map<double, std::vector<long long>> clusterSizeDist;
-    std::map<double, std::vector<long long>> clusterSizeDist_exact;
-    std::map<double, std::vector<long long>> clusterSizeDist_time;
-    std::set<double> time_orderParameterDistr;
     std::set<double> orderParameter_clusterSizeDist;
-    std::set<double> time_clusterSizeDist;
+    // std::set<double> time_clusterSizeDist;
+    std::map<double, std::vector<long long>> clusterSizeDist;
+    // std::map<double, std::vector<long long>> clusterSizeDist_exact;
+    // std::map<double, std::vector<long long>> clusterSizeDist_time;
 
     //! orderParameterDist[time] : Distribution of order parameter at specific time
-    std::map<double, std::vector<int>> orderParameterDist;
     std::set<double> time_orderParameterDist;
+    std::map<double, std::vector<int>> orderParameterDist;
 
     //! interEventTimeDist_op(time)["before"] : Average distribution of inter event time before discontinuous jump by order paramter (time)
     //! interEventTimeDist_op(time)["during"] : Average distribution of inter event time during discontinuous jump by order paramter (time)
@@ -99,7 +98,7 @@ namespace mBFW::generate{
         acceptanceThreshold = t_acceptanceThreshold;
         randomEngineSeed = t_randomEngineSeed;
         orderParameter_clusterSizeDist = mBFW::parameters::set_orderParameter_clusterSizeDist(t_networkSize, t_acceptanceThreshold);
-        time_clusterSizeDist = mBFW::parameters::set_time_clusterSizeDist(t_networkSize, t_acceptanceThreshold);
+        // time_clusterSizeDist = mBFW::parameters::set_time_clusterSizeDist(t_networkSize, t_acceptanceThreshold);
         time_orderParameterDist = mBFW::parameters::set_time_orderParameterDist(t_networkSize, t_acceptanceThreshold);
         std::tie(t_a, m_a, t_c, m_c) = mBFW::parameters::set_points(t_networkSize, t_acceptanceThreshold);
         t_a *= t_networkSize; t_c *= t_networkSize;
@@ -127,9 +126,9 @@ namespace mBFW::generate{
             clusterSizeDist[op].assign(t_networkSize, 0);
             // clusterSizeDist_exact[op].assign(t_networkSize, 0);
         }
-        for (const double& t : time_clusterSizeDist){
+        // for (const double& t : time_clusterSizeDist){
             // clusterSizeDist_time[t].assign(t_networkSize, 0);
-        }
+        // }
         for (const double& t : time_orderParameterDist){
             orderParameterDist[t].assign(t_networkSize, 0);
         }
