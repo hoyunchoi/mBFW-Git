@@ -103,7 +103,7 @@ namespace mBFW::data{
     //* Integer Log Bin
     std::map<double, double> intLogBin(const std::map<int, double>& t_raw){
         //* Setup values for integer log binning
-        const std::vector<double> exponentList = arange(0, 10, logBinDelta);
+        const std::vector<double> exponentList = arange(0.0, 10.0, logBinDelta);
         const std::vector<double> min = elementPow(10.0, exponentList);
         std::vector<double> value, difference;
         value.reserve(min.size()-1); difference.reserve(min.size()-1);
@@ -127,7 +127,7 @@ namespace mBFW::data{
 
     std::map<double, double> intLogBin(const std::vector<double>& t_raw){
         //* Setup values for integer log binning
-        const std::vector<double> exponentList = arange(0, 10, logBinDelta);
+        const std::vector<double> exponentList = arange(0.0, 10.0, logBinDelta);
         const std::vector<double> min = elementPow(10.0, exponentList);
         std::vector<double> value, difference;
         value.reserve(min.size()-1); difference.reserve(min.size()-1);
@@ -152,7 +152,7 @@ namespace mBFW::data{
     //* Double Log Bin
     std::map<double, double> doubleLogBin(const std::map<double, double>& t_raw){
         //* Setup values for double log binning
-        const std::vector<double> exponentList = arange(-10, 0, logBinDelta);
+        const std::vector<double> exponentList = arange(-10.0, 0.0, logBinDelta);
         const std::vector<double> min = elementPow(10.0, exponentList);
         std::vector<double> value, difference;
         value.reserve(min.size()-1); difference.reserve(min.size()-1);
@@ -728,7 +728,6 @@ namespace mBFW::data{
 
         //* void return
         return;
-
     }
 
     //* ------------------------------------------------------------- Integration of each observables data process -----------------------------------------------------
@@ -766,6 +765,9 @@ namespace mBFW::data{
         }
         if (t_checkList.at("interEventTimeDist_time")){
             dist("interEventTimeDist_time");
+        }
+        if (t_checkList.at("interEventTime_deltaUpperBound")){
+            X_deltaAcceptance("interEventTime_deltaUpperBound");
         }
         if (t_checkList.at("meanClusterSize")){
             time_X("meanClusterSize");

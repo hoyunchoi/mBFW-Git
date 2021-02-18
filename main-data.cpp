@@ -22,20 +22,21 @@ int main(int argc, char *argv[]){
 
     //* Check list of each observables
     std::map<std::string, bool> checkList;
-    checkList["ageDist_op"] = true;
-    checkList["ageDist_time"] = true;
-    checkList["clusterSizeDist"] = true;
-    checkList["deltaUpperBound_deltaAcceptance"] = true;
-    checkList["deltaUpperBoundDist_op"] = true;
-    checkList["deltaUpperBoundDist_time"] = true;
-    checkList["interEventTime"] = true;
-    checkList["interEventTimeDist_op"] =true;
-    checkList["interEventTimeDist_time"] =true;
-    checkList["meanClusterSize"] = true;
-    checkList["orderParameter"] = true;
-    checkList["orderParameterDist"] = true;
-    checkList["orderParameterVariance"] = true;
-    checkList["upperBound_deltaAcceptance"] = true;
+    checkList["ageDist_op"] = false;
+    checkList["ageDist_time"] = false;
+    checkList["clusterSizeDist"] = false;
+    checkList["deltaUpperBound_deltaAcceptance"] = false;
+    checkList["deltaUpperBoundDist_op"] = false;
+    checkList["deltaUpperBoundDist_time"] = false;
+    checkList["interEventTime"] = false;
+    checkList["interEventTimeDist_op"] =false;
+    checkList["interEventTimeDist_time"] =false;
+    checkList["interEventTime_deltaUpperBound"] = true;
+    checkList["meanClusterSize"] = false;
+    checkList["orderParameter"] = false;
+    checkList["orderParameterDist"] = false;
+    checkList["orderParameterVariance"] = false;
+    checkList["upperBound_deltaAcceptance"] = false;
 
     checkList["clusterSizeDist_exact"] = false;
     checkList["clusterSizeDist_time"] = false;
