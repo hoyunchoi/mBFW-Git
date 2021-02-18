@@ -73,7 +73,7 @@ namespace mBFW::data{
         for (const auto& file : fs::directory_iterator(t_directory)){
             const std::string fileName = file.path().filename();
             if (!fileName.find(t_target)){
-                baseFileNameList.insert(fileName);
+                baseFileNameList.emplace(fileName);
             }
         }
         return baseFileNameList;
@@ -95,7 +95,7 @@ namespace mBFW::data{
     const std::set<double> extractRepeaterList(const std::set<std::string>& t_fileNameList, const std::string& t_standard){
         std::set<double> repeaterList;
         for (const auto& fileName : t_fileNameList){
-            repeaterList.insert(extractRepeater(fileName, t_standard));
+            repeaterList.emplace(extractRepeater(fileName, t_standard));
         }
         return repeaterList;
     }
@@ -256,14 +256,14 @@ namespace mBFW::data{
             exit(1);
         }
 
-        //* Delete previous log binned data
-        for (const std::string fileName : additionalFileNameList){
-            conditionallyDeleteFile(additionalDirectory + fileName);
-        }
-
         //* Write log binned data
         std::cout << "Writing file " << additionalDirectory + fileName::NGE(networkSize, acceptanceThreshold, t_totalEnsembleSize) << "\n";
         CSV::write(additionalDirectory + fileName::NGE(networkSize, acceptanceThreshold, t_totalEnsembleSize), binned);
+
+        //* Delete previous log binned data if writing is finished
+        for (const std::string fileName : additionalFileNameList){
+            conditionallyDeleteFile(additionalDirectory + fileName);
+        }
     }
 
     //* ----------------------------------------------------- Process for each observables --------------------------------------------------------
@@ -305,7 +305,7 @@ namespace mBFW::data{
         //* Read target files and average them according to weight corresponding to each ensemble size
         for (const std::string& fileName : baseFileNameList){
             std::vector<double> temp;
-            CSV::read(baseDirectory + fileName, temp); conditionallyDeleteFile(baseDirectory + fileName);
+            CSV::read(baseDirectory + fileName, temp);
             const double ratio = extractEnsemble(fileName) / (double)totalEnsembleSize;
             average += temp * ratio;
         }
@@ -320,14 +320,17 @@ namespace mBFW::data{
             if (e<0){ e = 0; }
         }
 
-        //* Delete previous trimmed data
-        for (const std::string& fileName : additionalFileNameList){
-            conditionallyDeleteFile(additionalDirectory + fileName);
-        }
-
         //* Write trimmed data
         std::cout << "Writing file " << additionalDirectory + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize) << "\n";
         CSV::write(additionalDirectory + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize), average);
+
+        //* Delete previous averaged and trimmed data after successfully writing
+        for (const std::string& fileName : baseFileNameList){
+            conditionallyDeleteFile(baseDirectory + fileName);
+        }
+        for (const std::string& fileName : additionalFileNameList){
+            conditionallyDeleteFile(additionalDirectory + fileName);
+        }
 
         //* Find t_a for order parameter
         if (t_type == "orderParameter"){
@@ -379,7 +382,7 @@ namespace mBFW::data{
             std::map<int, double> average;
             for (const std::string& fileName : baseFileNameList){
                 std::map<int, double> temp;
-                CSV::read(baseDirectory + fileName, temp); conditionallyDeleteFile(baseDirectory + fileName);
+                CSV::read(baseDirectory + fileName, temp);
                 const double ratio = extractEnsemble(fileName) / (double)totalEnsembleSize;
                 for (auto it=temp.begin(); it!= temp.end(); ++it){
                     average[it->first] += it->second * ratio;
@@ -397,14 +400,17 @@ namespace mBFW::data{
             std::map<double, double> binned = intLogBin(average);
             binned /= accumulate(binned);
 
-            //* Delete previous log binned data
-            for (const std::string fileName : additionalFileNameList){
-                conditionallyDeleteFile(additionalDirectory + fileName);
-            }
-
             //* Write log binned data
             std::cout << "Writing file " << additionalDirectory + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize) << "\n";
             CSV::write(additionalDirectory + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize), binned);
+
+            //* Delete previous averaged and log binned data after successfully writing
+            for (const std::string& fileName : baseFileNameList){
+                conditionallyDeleteFile(baseDirectory + fileName);
+            }
+            for (const std::string fileName : additionalFileNameList){
+                conditionallyDeleteFile(additionalDirectory + fileName);
+            }
         }
 
         //* void return
@@ -448,7 +454,6 @@ namespace mBFW::data{
             for (const std::string& fileName : baseFileNameList){
                 std::vector<double> temp;
                 CSV::read(baseDirectory + fileName, temp);
-                conditionallyDeleteFile(baseDirectory + fileName);
                 const double ratio = extractEnsemble(fileName) / (double)totalEnsembleSize;
                 average += temp * ratio;
             }
@@ -464,14 +469,17 @@ namespace mBFW::data{
             std::map<double, double> binned = intLogBin(average);
             binned /= accumulate(binned);
 
-            //* Delete previous log binned data
-            for (const std::string fileName : additionalFileNameList){
-                conditionallyDeleteFile(additionalDirectory + fileName);
-            }
-
             //* Write log binned data
             std::cout << "Writing file " << additionalDirectory + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize) << "\n";
             CSV::write(additionalDirectory + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize), binned);
+
+            //* Delete previous averaged and log binned data after successfully writing
+            for (const std::string& fileName : baseFileNameList){
+                conditionallyDeleteFile(baseDirectory + fileName);
+            }
+            for (const std::string fileName : additionalFileNameList){
+                conditionallyDeleteFile(additionalDirectory + fileName);
+            }
         }
         //* void return
         return;
@@ -504,12 +512,12 @@ namespace mBFW::data{
             for (const std::string& fileName : baseFileNameList){
                 if (fileName.find(standard + to_stringWithPrecision(repeater, 4)) != fileName.npos){
                     totalEnsembleSize += extractEnsemble(fileName);
-                    baseFileNameList_repeater.insert(fileName);
+                    baseFileNameList_repeater.emplace(fileName);
                 }
             }
             for (const std::string& fileName : additionalFileNameList){
                 if (fileName.find(standard + to_stringWithPrecision(repeater, 4)) != fileName.npos){
-                    additionalFileNameList_repeater.insert(fileName);
+                    additionalFileNameList_repeater.emplace(fileName);
                 }
             }
 
@@ -529,10 +537,9 @@ namespace mBFW::data{
 
             //* Read target files and average them according to weight corresponding to each ensemble size
             std::map<int, double> average;
-            for (const std::string fileName : baseFileNameList_repeater){
-                baseFileNameList.erase(fileName);
+            for (const std::string& fileName : baseFileNameList_repeater){
                 std::map<int, double> temp;
-                CSV::read(baseDirectory + fileName, temp); conditionallyDeleteFile(baseDirectory + fileName);
+                CSV::read(baseDirectory + fileName, temp);
                 const double ratio = extractEnsemble(fileName) / (double)totalEnsembleSize;
                 for (auto it = temp.begin(); it!=temp.end(); ++it){
                     average[it->first] += it->second * ratio;
@@ -546,12 +553,6 @@ namespace mBFW::data{
             std::map<double, double> binned = intLogBin(average);
             binned /= accumulate(binned);
 
-            //* Delete previous log binned data
-            for (const std::string& fileName : additionalFileNameList_repeater){
-                conditionallyDeleteFile(additionalDirectory + fileName);
-                additionalFileNameList.erase(fileName);
-            }
-
             //* Write averaged data and write log binned data
             if (standard == "OP"){
                 std::cout << "Writing file " << baseDirectory + fileName::NGEOP(networkSize, acceptanceThreshold, totalEnsembleSize, repeater, 0) << "\n";
@@ -564,6 +565,16 @@ namespace mBFW::data{
                 CSV::write(baseDirectory + fileName::NGET(networkSize, acceptanceThreshold, totalEnsembleSize, repeater, 0), average);
                 std::cout << "Writing file " << additionalDirectory + fileName::NGET(networkSize, acceptanceThreshold, totalEnsembleSize, repeater) << "\n";
                 CSV::write(additionalDirectory + fileName::NGET(networkSize, acceptanceThreshold, totalEnsembleSize, repeater), binned);
+            }
+
+            //* Delete previous averaged and log binned data after successfully writing
+            for (const std::string& fileName : baseFileNameList_repeater){
+                conditionallyDeleteFile(baseDirectory + fileName);
+                baseFileNameList.erase(fileName);
+            }
+            for (const std::string& fileName : additionalFileNameList_repeater){
+                conditionallyDeleteFile(additionalDirectory + fileName);
+                additionalFileNameList.erase(fileName);
             }
         }
 
@@ -592,12 +603,12 @@ namespace mBFW::data{
             for (const std::string& fileName : baseFileNameList){
                 if (fileName.find("T" + to_stringWithPrecision(repeater, 4)) != fileName.npos){
                     totalEnsembleSize += extractEnsemble(fileName);
-                    baseFileNameList_repeater.insert(fileName);
+                    baseFileNameList_repeater.emplace(fileName);
                 }
             }
             for (const std::string& fileName : additionalFileNameList){
                 if (fileName.find("T" + to_stringWithPrecision(repeater, 4)) != fileName.npos){
-                    additionalFileNameList_repeater.insert(fileName);
+                    additionalFileNameList_repeater.emplace(fileName);
                 }
             }
 
@@ -618,9 +629,8 @@ namespace mBFW::data{
             //* Read target files and average them according to weight corresponding to each ensemble size
             std::map<double, double> average;
             for (const std::string fileName : baseFileNameList_repeater){
-                baseFileNameList.erase(fileName);
                 std::map<double, double> temp;
-                CSV::read(baseDirectory + fileName, temp); conditionallyDeleteFile(baseDirectory + fileName);
+                CSV::read(baseDirectory + fileName, temp);
                 const double ratio = extractEnsemble(fileName) / (double)totalEnsembleSize;
                 for (auto it = temp.begin(); it != temp.end(); ++it){
                     average[it->first] += it->second * ratio;
@@ -634,17 +644,21 @@ namespace mBFW::data{
             std::map<double, double> binned = doubleLinBin(average);
             binned /= accumulate(binned);
 
-            //* Delete previous lin binned data
-            for (const std::string& fileName : additionalFileNameList_repeater){
-                conditionallyDeleteFile(additionalDirectory + fileName);
-                additionalFileNameList.erase(fileName);
-            }
-
             //* Write averaged data and write log binned data
             std::cout << "Writing file " << baseDirectory + fileName::NGET(networkSize, acceptanceThreshold, totalEnsembleSize, repeater, 0) << "\n";
             CSV::write(baseDirectory + fileName::NGET(networkSize, acceptanceThreshold, totalEnsembleSize, repeater, 0), average);
             std::cout << "Writing file " << additionalDirectory + fileName::NGET(networkSize, acceptanceThreshold, totalEnsembleSize, repeater) << "\n";
             CSV::write(additionalDirectory + fileName::NGET(networkSize, acceptanceThreshold, totalEnsembleSize, repeater), binned);
+
+            //* Delete previous averaged and lin binned data after successfully writing
+            for (const std::string& fileName : baseFileNameList_repeater){
+                conditionallyDeleteFile(baseDirectory + fileName);
+                baseFileNameList.erase(fileName);
+            }
+            for (const std::string& fileName : additionalFileNameList_repeater){
+                conditionallyDeleteFile(additionalDirectory + fileName);
+                additionalFileNameList.erase(fileName);
+            }
         }
 
         //* void return
@@ -685,7 +699,7 @@ namespace mBFW::data{
             std::map<int, double> average;
             for (const std::string& fileName : baseFileNameList){
                 std::map<int, double> temp;
-                CSV::read(baseDirectory + fileName, temp); conditionallyDeleteFile(baseDirectory + fileName);
+                CSV::read(baseDirectory + fileName, temp);
                 const double ratio = extractEnsemble(fileName) / (double)totalEnsembleSize;
                 for (auto it=temp.begin(); it!= temp.end(); ++it){
                     average[it->first] += it->second * ratio;
@@ -699,14 +713,17 @@ namespace mBFW::data{
             //* Log Binning data
             std::map<double, double> binned = intLogBin(average);
 
-            //* Delete previous log binned data
-            for (const std::string fileName : additionalFileNameList){
-                conditionallyDeleteFile(additionalDirectory + fileName);
-            }
-
             //* Write log binned data
             std::cout << "Writing file " << additionalDirectory + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize) << "\n";
             CSV::write(additionalDirectory + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize), binned);
+
+            //* Delete previous averaged and log binned data after successfully writing
+            for (const std::string& fileName : baseFileNameList){
+                conditionallyDeleteFile(baseDirectory + fileName);
+            }
+            for (const std::string fileName : additionalFileNameList){
+                conditionallyDeleteFile(additionalDirectory + fileName);
+            }
         }
 
         //* void return

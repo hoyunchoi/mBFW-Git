@@ -6,16 +6,25 @@ relativePathList = {}
 relativePathList["ageDist_time/before"] = "/logBin/"
 relativePathList["ageDist_time/during"] = "/logBin/"
 relativePathList["ageDist_time/after"] = "/logBin/"
+relativePathList["ageDist_op/before"] = "/logBin/"
+relativePathList["ageDist_op/during"] = "/logBin/"
+relativePathList["ageDist_op/after"] = "/logBin/"
 relativePathList["clusterSizeDist"] = "/logBin/"
 relativePathList["clusterSizeDist_exact"] = "/logBin/"
 relativePathList["clusterSizeDist_time"] = "/logBin/"
 relativePathList["deltaUpperBoundDist_time/before"] = "/logBin/"
 relativePathList["deltaUpperBoundDist_time/during"] = "/logBin/"
 relativePathList["deltaUpperBoundDist_time/after"] = "/logBin/"
+relativePathList["deltaUpperBoundDist_op/before"] = "/logBin/"
+relativePathList["deltaUpperBoundDist_op/during"] = "/logBin/"
+relativePathList["deltaUpperBoundDist_op/after"] = "/logBin/"
 relativePathList["interEventTime"] = "/average/"
 relativePathList["interEventTimeDist_time/before"] = "/logBin/"
 relativePathList["interEventTimeDist_time/during"] = "/logBin/"
 relativePathList["interEventTimeDist_time/after"] = "/logBin/"
+relativePathList["interEventTimeDist_op/before"] = "/logBin/"
+relativePathList["interEventTimeDist_op/during"] = "/logBin/"
+relativePathList["interEventTimeDist_op/after"] = "/logBin/"
 relativePathList["meanClusterSize"] = "/average/"
 relativePathList["meanClusterSize_trial"] = "/average/"
 relativePathList["orderParameter"] = "/average/"
@@ -25,10 +34,10 @@ relativePathList["orderParameterVariance"] = "/average/"
 relativePathList["orderParameterVariance_trial"] = "/average/"
 relativePathList["points"] = "/"
 
-rootPath = "../data/mBFW_hybrid/"
+baseDirectory = "../data/mBFW/"
 absolutePathList = {}
 for observable, relativePath in relativePathList.items():
-    absolutePathList[observable] = rootPath + observable + relativePath
+    absolutePathList[observable] = baseDirectory + observable + relativePath
 
 #* CSV Reader
 def readCSV(t_fileName):
