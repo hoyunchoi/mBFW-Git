@@ -101,30 +101,6 @@ namespace mBFW::data{
     }
 
     //* Integer Log Bin
-    std::map<double, double> intLogBin(const std::map<int, double>& t_raw){
-        //* Setup values for integer log binning
-        const std::vector<double> exponentList = arange(0.0, 10.0, logBinDelta);
-        const std::vector<double> min = elementPow(10.0, exponentList);
-        std::vector<double> value, difference;
-        value.reserve(min.size()-1); difference.reserve(min.size()-1);
-        for (int i=0; i<min.size()-1; ++i){
-            value.emplace_back(std::sqrt(min[i]*min[i+1]));
-            difference.emplace_back(min[i+1]-min[i]);
-        }
-
-        //* Bin the data
-        std::map<double, double> binned;
-        for (auto it=t_raw.begin(); it!=t_raw.end(); ++it){
-            for (int i=0; i<value.size(); ++i){
-                if (it->first < min[i+1]){
-                    binned[value[i]] += it->second / difference[i];
-                    break;
-                }
-            }
-        }
-        return binned;
-    }
-
     std::map<double, double> intLogBin(const std::vector<double>& t_raw){
         //* Setup values for integer log binning
         const std::vector<double> exponentList = arange(0.0, 10.0, logBinDelta);
@@ -146,6 +122,60 @@ namespace mBFW::data{
                 }
             }
         }
+        return binned;
+    }
+
+    std::map<double, double> intLogBin(const std::map<int, double>& t_raw){
+        //* Setup values for integer log binning
+        const std::vector<double> exponentList = arange(0.0, 10.0, logBinDelta);
+        const std::vector<double> min = elementPow(10.0, exponentList);
+        std::vector<double> value, difference;
+        value.reserve(min.size()-1); difference.reserve(min.size()-1);
+        for (int i=0; i<min.size()-1; ++i){
+            value.emplace_back(std::sqrt(min[i]*min[i+1]));
+            difference.emplace_back(min[i+1]-min[i]);
+        }
+
+        //* Bin the data
+        std::map<double, double> binned;
+        for (const auto& e : t_raw){
+            for (unsigned i=0; i<value.size(); ++i){
+                if (e.first < min[i+1]){
+                    binned[value[i]] += e.second / difference[i];
+                    break;
+                }
+            }
+        }
+        return binned;
+    }
+
+    std::map<std::pair<double, double>, double> intLogLogBin(const std::map<std::pair<int, int>, double>& t_raw){
+        //* Setup values for integer log binning
+        const std::vector<double> exponentList = arange(0.0, 10.0, logBinDelta);
+        const std::vector<double> min = elementPow(10.0, exponentList);
+        std::vector<double> value, difference;
+        value.reserve(min.size()-1); difference.reserve(min.size()-1);
+        for (int i=0; i<min.size()-1; ++i){
+            value.emplace_back(std::sqrt(min[i]*min[i+1]));
+            difference.emplace_back(min[i+1]-min[i]);
+        }
+
+        //* Bin the data
+        std::map<std::pair<double, double>, double> binned;
+        for (const auto& e : t_raw){
+            for (unsigned i=0; i<value.size(); ++i){
+                if (e.first.first < min[i+1]){
+                    for (unsigned j=0; j<value.size(); ++j){
+                        if (e.first.second < min[j+1]){
+                            binned[std::make_pair(value[i], value[j])] += e.second / difference[i];
+                            break;
+                        }
+                    }
+                    break;
+                }
+            }
+        }
+
         return binned;
     }
 
@@ -383,8 +413,8 @@ namespace mBFW::data{
             std::map<int, double> temp;
             CSV::read(baseDirectory + fileName, temp);
             const double ratio = extractEnsemble(fileName) / (double)totalEnsembleSize;
-            for (auto it=temp.begin(); it!= temp.end(); ++it){
-                average[it->first] += it->second * ratio;
+            for (auto e : temp){
+                average[e.first] += e.second * ratio;
             }
         }
 
@@ -729,7 +759,68 @@ namespace mBFW::data{
     }
 
     void sampled_X_interEventTime(const std::string& t_type){
-        //* Double log
+        //* Defind directories
+        const std::string baseDirectory = rootPath + t_type + "/";
+        const std::string additionalDirectory = defineAdditionalDirectory(baseDirectory, "logBin");
+
+        //* Find target files at base directory and logBin directory corresponding to input system size and acceptance threshold
+        const std::set<std::string> baseFileNameList = findTargetFileNameList(baseDirectory, baseName);
+        const std::set<std::string> additionalFileNameList = findTargetFileNameList(additionalDirectory, baseName);
+
+        //* Check the number of files
+        if (baseFileNameList.size() == 0){
+            std::cout << "WARNING: No file at " << baseDirectory << ", " << baseName << "\n";
+            exit(1);
+        }
+        else if (additionalFileNameList.size() >= 2){
+            std::cout << "WARNING: More than two files at " << additionalDirectory << ", " << baseName << "\n";
+            exit(1);
+        }
+        else if (baseFileNameList.size() == 1){
+            std::cout << "Passing file " << additionalDirectory + *additionalFileNameList.begin() << "\n";
+            return;
+        }
+
+        //* Find ensemble Size of each target files and total ensemble size
+        int totalEnsembleSize = 0;
+        for (const std::string& fileName : baseFileNameList){
+            totalEnsembleSize += extractEnsemble(fileName);
+        }
+
+        //* Read target files and average them according to weight corresponding to each ensemble size
+        std::map<std::pair<int, int>, double> average;
+        for (const std::string& fileName : baseFileNameList){
+            std::map<std::pair<int, int>, double> temp;
+            CSV::read(baseDirectory + fileName, temp);
+            const double ratio = extractEnsemble(fileName) / (double)totalEnsembleSize;
+            for (auto e : temp){
+                average[e.first] += e.second * ratio;
+            }
+        }
+
+        //* Normalize averaged data
+        average /= accumulate(average);
+
+        //* Write averaged data
+        std::cout << "Writing file " << baseDirectory + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize, 0) << "\n";
+        CSV::write(baseDirectory + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize, 0), average);
+
+        //* Double log binning data
+        std::map<std::pair<double, double>, double> binned = intLogLogBin(average);
+        binned /= accumulate(binned);
+
+        //* Write log binned data
+        std::cout << "Writing file " << additionalDirectory + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize) << "\n";
+        CSV::write(additionalDirectory + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize), binned);
+
+        //* Delete previous averaged and log binned data after successfully writing
+        for (const std::string& fileName : baseFileNameList){
+            conditionallyDeleteFile(baseDirectory + fileName);
+        }
+        for (const std::string fileName : additionalFileNameList){
+            conditionallyDeleteFile(additionalDirectory + fileName);
+        }
+
         //* void return
         return;
     }
