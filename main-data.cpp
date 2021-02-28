@@ -40,8 +40,8 @@ int main(int argc, char *argv[]){
     checkList["orderParameterVariance"] = false;
     checkList["upperBound_deltaAcceptance"] = false;
     checkList["sampled_deltaUpperBound_interEventTime"] = true;
-    checkList["sampled_upperBound_interEventTime"] = false;
-    checkList["sampled_time_interEventTime"] = false;
+    checkList["sampled_upperBound_interEventTime"] = true;
+    checkList["sampled_time_interEventTime"] = true;
 
     checkList["clusterSizeDist_exact"] = false;
     checkList["clusterSizeDist_time"] = false;

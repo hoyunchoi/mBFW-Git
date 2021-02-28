@@ -107,7 +107,7 @@ namespace mBFW::data{
         const std::vector<double> min = elementPow(10.0, exponentList);
         std::vector<double> value, difference;
         value.reserve(min.size()-1); difference.reserve(min.size()-1);
-        for (int i=0; i<min.size()-1; ++i){
+        for (unsigned i=0; i<min.size()-1; ++i){
             value.emplace_back(std::sqrt(min[i] * min[i+1]));
             difference.emplace_back(min[i+1] - min[i]);
         }
@@ -131,7 +131,7 @@ namespace mBFW::data{
         const std::vector<double> min = elementPow(10.0, exponentList);
         std::vector<double> value, difference;
         value.reserve(min.size()-1); difference.reserve(min.size()-1);
-        for (int i=0; i<min.size()-1; ++i){
+        for (unsigned i=0; i<min.size()-1; ++i){
             value.emplace_back(std::sqrt(min[i]*min[i+1]));
             difference.emplace_back(min[i+1]-min[i]);
         }
@@ -155,7 +155,7 @@ namespace mBFW::data{
         const std::vector<double> min = elementPow(10.0, exponentList);
         std::vector<double> value, difference;
         value.reserve(min.size()-1); difference.reserve(min.size()-1);
-        for (int i=0; i<min.size()-1; ++i){
+        for (unsigned i=0; i<min.size()-1; ++i){
             value.emplace_back(std::sqrt(min[i]*min[i+1]));
             difference.emplace_back(min[i+1]-min[i]);
         }
@@ -186,7 +186,7 @@ namespace mBFW::data{
         const std::vector<double> min = elementPow(10.0, exponentList);
         std::vector<double> value, difference;
         value.reserve(min.size()-1); difference.reserve(min.size()-1);
-        for (int i=0; i<min.size()-1; ++i){
+        for (unsigned i=0; i<min.size()-1; ++i){
             value.emplace_back(std::sqrt(min[i] * min[i+1]));
             difference.emplace_back(min[i+1] - min[i]);
         }
@@ -194,7 +194,7 @@ namespace mBFW::data{
         //* Bind the data
         std::map<double, double> binned;
         for (auto it=t_raw.begin(); it!=t_raw.end(); ++it){
-            for (int i=0; i<value.size(); ++i){
+            for (unsigned i=0; i<value.size(); ++i){
                 if (it->first < min[i+1]){
                     binned[value[i]] += it->second / difference[i];
                     break;
@@ -210,14 +210,14 @@ namespace mBFW::data{
         const std::vector<double> min = arange(0.0, 1.0, 5e-4);
         std::vector<double> value;
         const double difference = networkSize * 5e-4;
-        for (int i=0; i<min.size()-1; ++i){
+        for (unsigned i=0; i<min.size()-1; ++i){
             value.emplace_back((min[i] + min[i+1])/2.0);
         }
 
         //* Bin the data
         std::map<double, double> binned;
         for (auto it=t_raw.begin(); it!=t_raw.end(); ++it){
-            for (int i=0; i<value.size(); ++i){
+            for (unsigned i=0; i<value.size(); ++i){
                 if (it->first < min[i+1]){
                     binned[value[i]] += it->second / difference;
                     break;
