@@ -728,6 +728,12 @@ namespace mBFW::data{
         return;
     }
 
+    void sampled_X_interEventTime(const std::string& t_type){
+        //* Double log
+        //* void return
+        return;
+    }
+
     //* ------------------------------------------------------------- Integration of each observables data process -----------------------------------------------------
     //* Run selected observables at check list
     void process(const std::map<std::string, bool>& t_checkList){
@@ -804,6 +810,15 @@ namespace mBFW::data{
         }
         if (t_checkList.at("upperBound_deltaAcceptance")){
             X_deltaAcceptance("upperBound_deltaAcceptance");
+        }
+        if (t_checkList.at("sampled_deltaUpperBound_interEventTime")){
+            sampled_X_interEventTime("sampled_deltaUpperBound_interEventTime");
+        }
+        if (t_checkList.at("sampled_upperBound_interEventTime")){
+            sampled_X_interEventTime("sampled_upperBound_interEventTime");
+        }
+        if (t_checkList.at("sampled_time_interEventTime")){
+            sampled_X_interEventTime("sampled_time_interEventTime");
         }
     }
 

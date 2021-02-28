@@ -40,27 +40,27 @@ namespace mBFW::generate{
 
     //* Declaration of observables
     //! orderParameter[time]: Average value of order parameter at specific time
-    std::vector<double> orderParameter;
+    // std::vector<double> orderParameter;
     // std::vector<double> orderParameter_trial;
 
     //! secondMoment[time]: Average value of second moment at specific time
-    std::vector<double> secondMoment;
+    // std::vector<double> secondMoment;
     // std::vector<double> secondMoment_trial;
 
     //! meanClusterSize[time]: Average value of normalized mean cluster size at specific time
-    std::vector<double> meanClusterSize;
+    // std::vector<double> meanClusterSize;
     // std::vector<double> meanClusterSize_trial;
 
     //! interEventTime[time]: Average value of inter event time at specific time
-    std::vector<double> interEventTime;
-    std::vector<int> sampled_interEventTime;
+    // std::vector<double> interEventTime;
+    // std::vector<int> sampled_interEventTime;
 
     //! clusterSizeDist[op]: Average distribution of cluster size when order parameter passes op
     //! clusterSizeDist_exact[op]: Average distribution of cluster size when order parameter is exactly op
     //! clusterSizeDist_time[time]: Average distribution of cluster size when time at specific time
-    std::set<double> orderParameter_clusterSizeDist;
+    // std::set<double> orderParameter_clusterSizeDist;
     // std::set<double> time_clusterSizeDist;
-    std::map<double, std::vector<long long>> clusterSizeDist;
+    // std::map<double, std::vector<long long>> clusterSizeDist;
     // std::map<double, std::vector<long long>> clusterSizeDist_exact;
     // std::map<double, std::vector<long long>> clusterSizeDist_time;
 
@@ -71,30 +71,35 @@ namespace mBFW::generate{
     //! interEventTimeDist_op(time)["before"] : Average distribution of inter event time before discontinuous jump by order paramter (time)
     //! interEventTimeDist_op(time)["during"] : Average distribution of inter event time during discontinuous jump by order paramter (time)
     //! interEventTimeDist_op(time)["after"] : Average distribution of inter event time after discontinuous jump by order paramter (time)
-    std::map<std::string, std::vector<int>> interEventTimeDist_op;
-    std::map<std::string, std::vector<int>> interEventTimeDist_time;
-    std::vector<int> interEventTimeDist_tot;
+    // std::map<std::string, std::vector<int>> interEventTimeDist_op;
+    // std::map<std::string, std::vector<int>> interEventTimeDist_time;
+    // std::vector<int> interEventTimeDist_tot;
 
     //! ageDist_op(time)["state"] : Average distribution of age before(during, after) discontinuous jump by order paramter (time)
-    std::map<std::string, std::vector<long long>> ageDist_op;
-    std::map<std::string, std::vector<long long>> ageDist_time;
+    // std::map<std::string, std::vector<long long>> ageDist_op;
+    // std::map<std::string, std::vector<long long>> ageDist_time;
 
     //! deltaUpperBoundDist_op(time)["state"] : Average distribution of deltaK before(during, after) discontinuous jump by order paramter (time)
-    std::map<std::string, std::vector<int>> deltaUpperBoundDist_op;
-    std::map<std::string, std::vector<int>> deltaUpperBoundDist_time;
-    std::vector<int> deltaUpperBoundDist_tot;
+    // std::map<std::string, std::vector<int>> deltaUpperBoundDist_op;
+    // std::map<std::string, std::vector<int>> deltaUpperBoundDist_time;
+    // std::vector<int> deltaUpperBoundDist_tot;
 
     //! upperBound_deltaAcceptance[state][K] : Average delta acceptance at specific upper bound K before(during, after) discontinuous jump by order parameter
-    std::map<std::string, std::vector<double>> upperBound_deltaAcceptance;
-    std::map<std::string, std::vector<int>> sampled_upperBound_deltaAcceptance;
+    // std::map<std::string, std::vector<double>> upperBound_deltaAcceptance;
+    // std::map<std::string, std::vector<int>> sampled_upperBound_deltaAcceptance;
 
     //! deltaUpperBound_deltaAcceptance[state][deltaK] : Average delta acceptance at specific delta upper bound deltaK before(during, after) discontinuous jump by order parameter
-    std::map<std::string, std::vector<double>> deltaUpperBound_deltaAcceptance;
-    std::map<std::string, std::vector<int>> sampled_deltaUpperBound_deltaAcceptance;
+    // std::map<std::string, std::vector<double>> deltaUpperBound_deltaAcceptance;
+    // std::map<std::string, std::vector<int>> sampled_deltaUpperBound_deltaAcceptance;
 
     //! interEventTime_deltaUpperBound[state][iet] : Average delta upper bound at specific inter event time. log binned
-    std::map<std::string, std::vector<long long>> interEventTime_deltaUpperBound;
-    std::map<std::string, std::vector<int>> sampled_interEventTime_deltaUpperBound;
+    // std::map<std::string, std::vector<long long>> interEventTime_deltaUpperBound;
+    // std::map<std::string, std::vector<int>> sampled_interEventTime_deltaUpperBound;
+
+    //! Sampled_X_interEventTime
+    std::map<std::pair<int, int>, int> sampled_deltaUpperBound_interEventTime;
+    std::map<std::pair<int, int>, int> sampled_upperBound_interEventTime;
+    std::map<std::pair<int, int>, int> sampled_time_interEventTime;
 
     //! Dynacmis of network
     // std::vector<std::vector<long long>> dynamics;
@@ -108,7 +113,7 @@ namespace mBFW::generate{
         coreNum = t_coreNum;
         acceptanceThreshold = t_acceptanceThreshold;
         randomEngineSeed = t_randomEngineSeed;
-        orderParameter_clusterSizeDist = mBFW::parameters::set_orderParameter_clusterSizeDist(t_networkSize, t_acceptanceThreshold);
+        // orderParameter_clusterSizeDist = mBFW::parameters::set_orderParameter_clusterSizeDist(t_networkSize, t_acceptanceThreshold);
         // time_clusterSizeDist = mBFW::parameters::set_time_clusterSizeDist(t_networkSize, t_acceptanceThreshold);
         // time_orderParameterDist = mBFW::parameters::set_time_orderParameterDist(t_networkSize, t_acceptanceThreshold);
         std::tie(t_a, m_a, t_c, m_c) = mBFW::parameters::set_points(t_networkSize, t_acceptanceThreshold);
@@ -133,8 +138,8 @@ namespace mBFW::generate{
         // meanClusterSize_trial.assign(maxTrialTime, 0.0);
         // interEventTime.assign(maxTime, 0.0);
         // sampled_interEventTime.assign(maxTime, 0);
-        interEventTimeDist_tot.assign(maxTime, 0);
-        deltaUpperBoundDist_tot.assign(maxTime, 0);
+        // interEventTimeDist_tot.assign(maxTime, 0);
+        // deltaUpperBoundDist_tot.assign(maxTime, 0);
         // for (const double& op : orderParameter_clusterSizeDist){
         //     clusterSizeDist[op].assign(t_networkSize, 0);
             // clusterSizeDist_exact[op].assign(t_networkSize, 0);
@@ -177,11 +182,6 @@ namespace mBFW::generate{
             int eventTime = 0;
             double maxDeltaAcceptance = 0.0;
             bool choosingNewNode = true;
-            std::set<double> findingClusterSizeDist;
-            for (const double& op : orderParameter_clusterSizeDist){
-                findingClusterSizeDist.insert(op);
-            }
-            std::set<double> newFindingClusterSizeDist = findingClusterSizeDist;
 
             //* Set initial conditions
             // orderParameter[0] += 1.0/networkSize;
@@ -190,6 +190,8 @@ namespace mBFW::generate{
             // orderParameter_trial[0] += 1.0/networkSize;
             // secondMoment_trial[0] += std::pow(1.0/networkSize, 2.0);
             // meanClusterSize_trial[0] += 1.0;
+            // std::set<double> findingclusterSizeDist = orderParameter_clusterSizeDist;
+            // std::set<double> newFindingClusterSizeDist = findingClusterSizeDist;
 
             //* Do mBFW algorithm until all clusters merge to one
             while (model.getMaximumClusterSize() < networkSize){
@@ -329,7 +331,7 @@ namespace mBFW::generate{
                         {
                             // ++interEventTimeDist_time[currentState_time][time-eventTime];
                             // ++interEventTimeDist_op[currentState_op][time-eventTime];
-                            ++interEventTimeDist_tot[time-eventTime];
+                            // ++interEventTimeDist_tot[time-eventTime];
 
                         }
 
@@ -343,7 +345,7 @@ namespace mBFW::generate{
                         {
                             // ++deltaUpperBoundDist_time[currentState_time][deltaMaximumClusterSize];
                             // ++deltaUpperBoundDist_op[currentState_op][deltaMaximumClusterSize];
-                            ++deltaUpperBoundDist_tot[deltaMaximumClusterSize];
+                            // ++deltaUpperBoundDist_tot[deltaMaximumClusterSize];
                         }
 
                         //! (Delta)Upper Bound_Delta Acceptance
@@ -352,6 +354,13 @@ namespace mBFW::generate{
                             // ++sampled_upperBound_deltaAcceptance[currentState_op][upperBound];
                             // deltaUpperBound_deltaAcceptance[currentState_op][deltaMaximumClusterSize] += maxDeltaAcceptance;
                             // ++sampled_deltaUpperBound_deltaAcceptance[currentState_op][upperBound];
+                        }
+
+                        //! Sampled_X_interEventTime
+                        {
+                            ++sampled_deltaUpperBound_interEventTime[std::make_pair(deltaMaximumClusterSize, time-eventTime)];
+                            ++sampled_upperBound_interEventTime[std::make_pair(upperBound, time-eventTime)];
+                            ++sampled_time_interEventTime[std::make_pair(time, time-eventTime)];
                         }
 
                         //* Initialize variable for new period
@@ -580,18 +589,18 @@ namespace mBFW::generate{
             //     }
             //     CSV::write(directory_op + fileName::NGE(networkSize, acceptanceThreshold, ensembleSize, coreNum), trimmed_op);
             // }
-            const std::string directory = baseDirectory + "interEventTimeDist_tot/";
-            if (!fs::exists(directory)){
-                fs::create_directories(directory);
-            }
-            std::map<int, double> trimmed;
-            const double tot = std::accumulate(interEventTimeDist_tot.begin(), interEventTimeDist_tot.end(), 0.0);
-            for (int iet=0; iet<networkSize; ++iet){
-                if (interEventTimeDist_tot[iet]){
-                    trimmed[iet] = interEventTimeDist_tot[iet] / tot;
-                }
-            }
-            CSV::write(directory + fileName::NGE(networkSize, acceptanceThreshold, ensembleSize, coreNum), trimmed);
+            // const std::string directory = baseDirectory + "interEventTimeDist_tot/";
+            // if (!fs::exists(directory)){
+            //     fs::create_directories(directory);
+            // }
+            // std::map<int, double> trimmed;
+            // const double tot = std::accumulate(interEventTimeDist_tot.begin(), interEventTimeDist_tot.end(), 0.0);
+            // for (int iet=0; iet<networkSize; ++iet){
+            //     if (interEventTimeDist_tot[iet]){
+            //         trimmed[iet] = interEventTimeDist_tot[iet] / tot;
+            //     }
+            // }
+            // CSV::write(directory + fileName::NGE(networkSize, acceptanceThreshold, ensembleSize, coreNum), trimmed);
         }
 
         //! Inter Event Time vs Delta Upper Bound
@@ -670,18 +679,18 @@ namespace mBFW::generate{
             //     CSV::write(directory_op + fileName::NGE(networkSize, acceptanceThreshold, ensembleSize, coreNum), trimmed_op);
             // }
 
-            const std::string directory = baseDirectory + "deltaUpperBoundDist_tot/";
-            if (!fs::exists(directory)){
-                fs::create_directories(directory);
-            }
-            std::map<int, double> trimmed;
-            const double tot = std::accumulate(deltaUpperBoundDist_tot.begin(), deltaUpperBoundDist_tot.end(), 0.0);
-            for (int deltaK = 0; deltaK < networkSize; ++deltaK){
-                if (deltaUpperBoundDist_tot[deltaK]){
-                    trimmed[deltaK] = (double)deltaUpperBoundDist_tot[deltaK] / tot;
-                }
-            }
-            CSV::write(directory + fileName::NGE(networkSize, acceptanceThreshold, ensembleSize, coreNum), trimmed);
+            // const std::string directory = baseDirectory + "deltaUpperBoundDist_tot/";
+            // if (!fs::exists(directory)){
+            //     fs::create_directories(directory);
+            // }
+            // std::map<int, double> trimmed;
+            // const double tot = std::accumulate(deltaUpperBoundDist_tot.begin(), deltaUpperBoundDist_tot.end(), 0.0);
+            // for (int deltaK = 0; deltaK < networkSize; ++deltaK){
+            //     if (deltaUpperBoundDist_tot[deltaK]){
+            //         trimmed[deltaK] = (double)deltaUpperBoundDist_tot[deltaK] / tot;
+            //     }
+            // }
+            // CSV::write(directory + fileName::NGE(networkSize, acceptanceThreshold, ensembleSize, coreNum), trimmed);
         }
 
         //! (Delta) Upper Bound vs Delta Acceptance
@@ -713,6 +722,36 @@ namespace mBFW::generate{
             //     }
             //     CSV::write(directory_deltaK + fileName::NGE(networkSize, acceptanceThreshold, ensembleSize, coreNum), trimmed_deltaK);
             // }
+        }
+
+        //! Sampled_X_interEventTime
+        {
+            const std::string directory_dk = baseDirectory + "sampled_deltaUpperBound_interEventTime/";
+            if (!fs::exists(directory_dk)){
+                fs::create_directories(directory_dk);
+            }
+            std::map<std::pair<int, int>, double> trimmed_dk(sampled_deltaUpperBound_interEventTime.begin(), sampled_deltaUpperBound_interEventTime.end());
+            const double tot_dk = accumulate(trimmed_dk);
+            trimmed_dk /= tot_dk;
+            CSV::write(directory_dk + fileName::NGE(networkSize, acceptanceThreshold, ensembleSize, coreNum), trimmed_dk);
+
+            const std::string directory_k = baseDirectory + "sampled_upperBound_interEventTime/";
+            if (!fs::exists(directory_k)){
+                fs::create_directories(directory_k);
+            }
+            std::map<std::pair<int, int>, double> trimmed_k(sampled_upperBound_interEventTime.begin(), sampled_upperBound_interEventTime.end());
+            const double tot_k = accumulate(trimmed_k);
+            trimmed_k /= tot_k;
+            CSV::write(directory_k + fileName::NGE(networkSize, acceptanceThreshold, ensembleSize, coreNum), trimmed_k);
+
+            const std::string directory_t = baseDirectory + "sampled_time_interEventTime/";
+            if (!fs::exists(directory_t)){
+                fs::create_directories(directory_t);
+            }
+            std::map<std::pair<int, int>, double> trimmed_t(sampled_time_interEventTime.begin(), sampled_time_interEventTime.end());
+            const double tot_t = accumulate(trimmed_t);
+            trimmed_t /= tot_t;
+            CSV::write(directory_t + fileName::NGE(networkSize, acceptanceThreshold, ensembleSize, coreNum), trimmed_t);
         }
 
         //! Dynamics

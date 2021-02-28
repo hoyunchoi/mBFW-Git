@@ -28,17 +28,20 @@ int main(int argc, char *argv[]){
     checkList["deltaUpperBound_deltaAcceptance"] = false;
     checkList["deltaUpperBoundDist_op"] = false;
     checkList["deltaUpperBoundDist_time"] = false;
-    checkList["deltaUpperBoundDist_tot"] = true;
+    checkList["deltaUpperBoundDist_tot"] = false;
     checkList["interEventTime"] = false;
-    checkList["interEventTimeDist_op"] =false;
-    checkList["interEventTimeDist_time"] =false;
-    checkList["interEventTimeDist_tot"] = true;
+    checkList["interEventTimeDist_op"] = false;
+    checkList["interEventTimeDist_time"] = false;
+    checkList["interEventTimeDist_tot"] = false;
     checkList["interEventTime_deltaUpperBound"] = false;
     checkList["meanClusterSize"] = false;
     checkList["orderParameter"] = false;
     checkList["orderParameterDist"] = false;
     checkList["orderParameterVariance"] = false;
     checkList["upperBound_deltaAcceptance"] = false;
+    checkList["sampled_deltaUpperBound_interEventTime"] = true;
+    checkList["sampled_upperBound_interEventTime"] = true;
+    checkList["sampled_time_interEventTime"] = true;
 
     checkList["clusterSizeDist_exact"] = false;
     checkList["clusterSizeDist_time"] = false;
