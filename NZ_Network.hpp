@@ -58,7 +58,7 @@ public:
         if (m_parent[t_node] < 0){
             return t_node;
         }
-        //* recursively aaaaa node
+        //* recursively find node
         return m_parent[t_node] = getRoot(m_parent[t_node]);
     }
 
@@ -93,7 +93,7 @@ public:
         }
         ++m_sortedCluster[newSize];
 
-        //! Maximum cluster
+        //! Find maximum cluster
         if (m_maximumClusterSize < newSize){
             m_deltaMaximumClusterSize = newSize-m_maximumClusterSize;
             m_maximumClusterSize = newSize;
@@ -101,7 +101,6 @@ public:
         else{
             m_deltaMaximumClusterSize = 0;
         }
-
     }
 
     //* Calculate second Maximum Cluster Size

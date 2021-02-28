@@ -177,7 +177,10 @@ namespace mBFW::parameters{
 
     //* Read t_a,m_a,t_c_var,m_c_csd and set
     const std::tuple<double, double, double, double> set_points(const int& t_networkSize, const double& t_acceptanceThreshold){
-        double t_a, m_a, t_c, m_c;
+        double t_a = 0.0;
+        double m_a = 0.0;
+        double t_c = 0.0;
+        double m_c = 0.0;
         std::ifstream readFile(baseDirectory + "points/" + fileName::base(t_networkSize, t_acceptanceThreshold) + ".txt");
         std::string line;
         while (getline(readFile, line)){
