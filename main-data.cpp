@@ -8,7 +8,7 @@ int main(int argc, char *argv[]){
     const double acceptanceThreshold=std::stod(argv[1]);
     const int networkSize=std::stoul(argv[2]);
     const bool deletion = true;
-    const double logBinDelta = 0.1;
+    constexpr double logBinDelta = 0.1;
 
     //* Check input network size and acceptance threshold
     if (mBFW::parameters::networkSizeList.find(networkSize) == mBFW::parameters::networkSizeList.end()){
@@ -28,10 +28,12 @@ int main(int argc, char *argv[]){
     checkList["deltaUpperBound_deltaAcceptance"] = false;
     checkList["deltaUpperBoundDist_op"] = false;
     checkList["deltaUpperBoundDist_time"] = false;
+    checkList["deltaUpperBoundDist_tot"] = true;
     checkList["interEventTime"] = false;
     checkList["interEventTimeDist_op"] =false;
     checkList["interEventTimeDist_time"] =false;
-    checkList["interEventTime_deltaUpperBound"] = true;
+    checkList["interEventTimeDist_tot"] = true;
+    checkList["interEventTime_deltaUpperBound"] = false;
     checkList["meanClusterSize"] = false;
     checkList["orderParameter"] = false;
     checkList["orderParameterDist"] = false;

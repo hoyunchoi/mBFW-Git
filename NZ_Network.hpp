@@ -93,7 +93,7 @@ public:
         }
         ++m_sortedCluster[newSize];
 
-        //! aaaaa maximum cluster
+        //! Maximum cluster
         if (m_maximumClusterSize < newSize){
             m_deltaMaximumClusterSize = newSize-m_maximumClusterSize;
             m_maximumClusterSize = newSize;

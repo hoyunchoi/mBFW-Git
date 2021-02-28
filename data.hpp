@@ -348,72 +348,70 @@ namespace mBFW::data{
 
     //* Process Distribution distinguished by discontinuous jump
     //! Inter Event Time Distribution (time, op), Delta Upper Bound Distribution (time, op)
-    void dist(const std::string& t_type = ""){
-        for (const std::string& state : states){
-            //* Define directories
-            const std::string baseDirectory = rootPath + t_type + "/" + state + "/";
-            const std::string additionalDirectory = defineAdditionalDirectory(baseDirectory, "logBin");
+    void dist(const std::string& t_type){
+        //* Define directories
+        const std::string baseDirectory = rootPath + t_type + "/";
+        const std::string additionalDirectory = defineAdditionalDirectory(baseDirectory, "logBin");
 
-            //* Find target files at base directory and logBin directory corresponding to input system size and acceptance threshold
-            const std::set<std::string> baseFileNameList = findTargetFileNameList(baseDirectory, baseName);
-            const std::set<std::string> additionalFileNameList = findTargetFileNameList(additionalDirectory, baseName);
+        //* Find target files at base directory and logBin directory corresponding to input system size and acceptance threshold
+        const std::set<std::string> baseFileNameList = findTargetFileNameList(baseDirectory, baseName);
+        const std::set<std::string> additionalFileNameList = findTargetFileNameList(additionalDirectory, baseName);
 
-            //* Check the number of files
-            if (baseFileNameList.size() == 0){
-                std::cout << "WARNING: No file at " << baseDirectory << ", " << baseName << "\n";
-                exit(1);
-            }
-            else if (additionalFileNameList.size() >= 2){
-                std::cout << "WARNING: More than two files at " << additionalDirectory << ", " << baseName << "\n";
-                exit(1);
-            }
-            else if (baseFileNameList.size() == 1){
-                std::cout << "Passing file " << additionalDirectory + *additionalFileNameList.begin() << "\n";
-                continue;
-            }
+        //* Check the number of files
+        if (baseFileNameList.size() == 0){
+            std::cout << "WARNING: No file at " << baseDirectory << ", " << baseName << "\n";
+            exit(1);
+        }
+        else if (additionalFileNameList.size() >= 2){
+            std::cout << "WARNING: More than two files at " << additionalDirectory << ", " << baseName << "\n";
+            exit(1);
+        }
+        else if (baseFileNameList.size() == 1){
+            std::cout << "Passing file " << additionalDirectory + *additionalFileNameList.begin() << "\n";
+            return;
+        }
 
-            //* Find Ensemble Size of each target files and total ensemble size
-            int totalEnsembleSize = 0;
-            for (const std::string& fileName : baseFileNameList){
-                totalEnsembleSize += extractEnsemble(fileName);
-            }
+        //* Find Ensemble Size of each target files and total ensemble size
+        int totalEnsembleSize = 0;
+        for (const std::string& fileName : baseFileNameList){
+            totalEnsembleSize += extractEnsemble(fileName);
+        }
 
-            //* Read target files and average them according to weight corresponding to each ensemble size
-            std::map<int, double> average;
-            for (const std::string& fileName : baseFileNameList){
-                std::map<int, double> temp;
-                CSV::read(baseDirectory + fileName, temp);
-                const double ratio = extractEnsemble(fileName) / (double)totalEnsembleSize;
-                for (auto it=temp.begin(); it!= temp.end(); ++it){
-                    average[it->first] += it->second * ratio;
-                }
-            }
-
-            //* Normalize averaged data
-            average /= accumulate(average);
-
-            //* Write averaged data
-            std::cout << "Writing file " << baseDirectory + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize, 0) << "\n";
-            CSV::write(baseDirectory + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize, 0), average);
-
-            //* Log Binning data
-            std::map<double, double> binned = intLogBin(average);
-            binned /= accumulate(binned);
-
-            //* Write log binned data
-            std::cout << "Writing file " << additionalDirectory + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize) << "\n";
-            CSV::write(additionalDirectory + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize), binned);
-
-            //* Delete previous averaged and log binned data after successfully writing
-            for (const std::string& fileName : baseFileNameList){
-                conditionallyDeleteFile(baseDirectory + fileName);
-            }
-            for (const std::string fileName : additionalFileNameList){
-                conditionallyDeleteFile(additionalDirectory + fileName);
+        //* Read target files and average them according to weight corresponding to each ensemble size
+        std::map<int, double> average;
+        for (const std::string& fileName : baseFileNameList){
+            std::map<int, double> temp;
+            CSV::read(baseDirectory + fileName, temp);
+            const double ratio = extractEnsemble(fileName) / (double)totalEnsembleSize;
+            for (auto it=temp.begin(); it!= temp.end(); ++it){
+                average[it->first] += it->second * ratio;
             }
         }
 
-        //* void return
+        //* Normalize averaged data
+        average /= accumulate(average);
+
+        //* Write averaged data
+        std::cout << "Writing file " << baseDirectory + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize, 0) << "\n";
+        CSV::write(baseDirectory + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize, 0), average);
+
+        //* Log Binning data
+        std::map<double, double> binned = intLogBin(average);
+        binned /= accumulate(binned);
+
+        //* Write log binned data
+        std::cout << "Writing file " << additionalDirectory + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize) << "\n";
+        CSV::write(additionalDirectory + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize), binned);
+
+        //* Delete previous averaged and log binned data after successfully writing
+        for (const std::string& fileName : baseFileNameList){
+            conditionallyDeleteFile(baseDirectory + fileName);
+        }
+        for (const std::string fileName : additionalFileNameList){
+            conditionallyDeleteFile(additionalDirectory + fileName);
+        }
+
+        //* Void return
         return;
     }
 
@@ -752,19 +750,33 @@ namespace mBFW::data{
             X_deltaAcceptance("deltaUpperBound_deltaAcceptance");
         }
         if (t_checkList.at("deltaUpperBoundDist_op")){
-            dist("deltaUpperBoundDist_op");
+            for (const std::string& state : states){
+                dist("deltaUpperBoundDist_op/" + state);
+            }
         }
         if (t_checkList.at("deltaUpperBoundDist_time")){
-            dist("deltaUpperBoundDist_time");
+            for (const std::string& state : states){
+                dist("deltaUpperBoundDist_time/" + state);
+            }
+        }
+        if (t_checkList.at("deltaUpperBoundDist_tot")){
+            dist("deltaUpperBoundDist_tot");
         }
         if (t_checkList.at("interEventTime")){
             time_X("interEventTime");
         }
         if (t_checkList.at("interEventTimeDist_op")){
-            dist("interEventTimeDist_op");
+            for (const std::string& state : states){
+                dist("interEventTimeDist_op/" + state);
+            }
         }
         if (t_checkList.at("interEventTimeDist_time")){
-            dist("interEventTimeDist_time");
+            for (const std::string& state : states){
+                dist("interEventTimeDist_time/" + state);
+            }
+        }
+        if (t_checkList.at("interEventTimeDist_tot")){
+            dist("interEventTimeDist_tot");
         }
         if (t_checkList.at("interEventTime_deltaUpperBound")){
             X_deltaAcceptance("interEventTime_deltaUpperBound");

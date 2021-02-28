@@ -4,7 +4,7 @@ acceptanceThresholdList = [0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
 #* Plot range for near critical point
 chi_plotRange = {}
 chi_plotRange[0.2] = [0.99, 0.999]
-chi_plotRange[0.3] = [0.96, 0.99]
+chi_plotRange[0.3] = [0.97, 0.99]
 chi_plotRange[0.4] = [0.945, 0.975]
 chi_plotRange[0.5] = [0.92, 0.95]
 chi_plotRange[0.6] = [0.885, 0.915]
@@ -17,8 +17,8 @@ chi_plotRange[0.9] = [0.69, 0.73]
 chi_fitRange = {}
 
 #! G=0.2
-chi_fitRange[10000, 0.2] = [0.9945,0.9955]
-chi_fitRange[20000, 0.2] = [0.9945,0.9955]
+chi_fitRange[10000, 0.2] = [0.9935,0.9955]
+chi_fitRange[20000, 0.2] = [0.994,0.9955]
 chi_fitRange[40000, 0.2] = [0.995,0.9957]
 chi_fitRange[80000, 0.2] = [0.995,0.9957]
 chi_fitRange[160000, 0.2] = [0.995,0.9957]
@@ -33,14 +33,14 @@ chi_fitRange[10240000, 0.2] = [0.9953,0.9958]
 chi_fitRange[10000, 0.3] = [0.981,0.984]
 chi_fitRange[20000, 0.3] = [0.981,0.984]
 chi_fitRange[40000, 0.3] = [0.982,0.984]
-chi_fitRange[80000, 0.3] = [0.983,0.985]
-chi_fitRange[160000, 0.3] = [0.983,0.985]
-chi_fitRange[320000, 0.3] = [0.983,0.985]
-chi_fitRange[640000, 0.3] = [0.983,0.985]
-chi_fitRange[1280000, 0.3] = [0.983,0.985]
-chi_fitRange[2560000, 0.3] = [0.983,0.985]
-chi_fitRange[5120000, 0.3] = [0.983,0.985]
-chi_fitRange[10240000, 0.3] = [0.983,0.985]
+chi_fitRange[80000, 0.3] = [0.983,0.9845]
+chi_fitRange[160000, 0.3] = [0.983,0.9845]
+chi_fitRange[320000, 0.3] = [0.983,0.9845]
+chi_fitRange[640000, 0.3] = [0.983,0.9845]
+chi_fitRange[1280000, 0.3] = [0.983,0.9845]
+chi_fitRange[2560000, 0.3] = [0.9833,0.9845]
+chi_fitRange[5120000, 0.3] = [0.9833,0.9845]
+chi_fitRange[10240000, 0.3] = [0.9833,0.9845]
 
 #! G=0.4
 chi_fitRange[10000, 0.4] = [0.9605,0.965]
@@ -48,25 +48,25 @@ chi_fitRange[20000, 0.4] = [0.9605,0.965]
 chi_fitRange[40000, 0.4] = [0.9605,0.965]
 chi_fitRange[80000, 0.4] = [0.9625,0.9655]
 chi_fitRange[160000, 0.4] = [0.9625,0.9655]
-chi_fitRange[320000, 0.4] = [0.9625,0.9655]
-chi_fitRange[640000, 0.4] = [0.9625,0.9655]
-chi_fitRange[1280000, 0.4] = [0.9625,0.9655]
-chi_fitRange[2560000, 0.4] = [0.9625,0.9655]
-chi_fitRange[5120000, 0.4] = [0.9625,0.9655]
-chi_fitRange[10240000, 0.4] = [0.9625,0.9655]
+chi_fitRange[320000, 0.4] = [0.9630,0.9655]
+chi_fitRange[640000, 0.4] = [0.9630,0.9655]
+chi_fitRange[1280000, 0.4] = [0.9630,0.9655]
+chi_fitRange[2560000, 0.4] = [0.9630,0.9655]
+chi_fitRange[5120000, 0.4] = [0.9630,0.9655]
+chi_fitRange[10240000, 0.4] = [0.9633,0.9655]
 
 #! G=0.5
 chi_fitRange[10000, 0.5] = [0.933,0.937]
 chi_fitRange[20000, 0.5] = [0.933,0.937]
 chi_fitRange[40000, 0.5] = [0.933,0.937]
-chi_fitRange[80000, 0.5] = [0.935,0.939]
-chi_fitRange[160000, 0.5] = [0.935,0.939]
-chi_fitRange[320000, 0.5] = [0.935,0.939]
-chi_fitRange[640000, 0.5] = [0.935,0.939]
-chi_fitRange[1280000, 0.5] = [0.935,0.939]
-chi_fitRange[2560000, 0.5] = [0.935,0.939]
-chi_fitRange[5120000, 0.5] = [0.935,0.939]
-chi_fitRange[10240000, 0.5] = [0.935,0.939]
+chi_fitRange[80000, 0.5] = [0.935,0.938]
+chi_fitRange[160000, 0.5] = [0.935,0.938]
+chi_fitRange[320000, 0.5] = [0.935,0.938]
+chi_fitRange[640000, 0.5] = [0.9355,0.938]
+chi_fitRange[1280000, 0.5] = [0.9355,0.938]
+chi_fitRange[2560000, 0.5] = [0.9355,0.938]
+chi_fitRange[5120000, 0.5] = [0.9355,0.938]
+chi_fitRange[10240000, 0.5] = [0.9355,0.938]
 
 #! G=0.6
 chi_fitRange[10000, 0.6] = [0.8955,0.9005]
@@ -126,20 +126,21 @@ t_c_var_inf = {}; nu_bar_var = {}
 t_c_mcs_inf = {}; nu_bar_mcs = {}
 
 #! G=0.2
-t_c_var_inf[0.2] = 0.995474; nu_bar_var[0.2] = 1/0.52364
-t_c_mcs_inf[0.2] = 0.995635; nu_bar_mcs[0.2] = 1/0.69374   #? Excluding 10000, 20000, 2560000, 5120000, 10240000
+t_c_var_inf[0.2] = 0.995474; nu_bar_var[0.2] = 1/0.52155
+t_c_mcs_inf[0.2] = 0.995635; nu_bar_mcs[0.2] = 1/0.68175   #? Excluding 10000, 20000, 2560000, 5120000, 10240000
 
 #! G=0.3
-t_c_var_inf[0.3] = 0.983691; nu_bar_var[0.3] = 1/0.71800   #? Excluding 10240000
-t_c_mcs_inf[0.3] = 0.983689; nu_bar_mcs[0.3] = 1/0.78571   #? Excluding 5120000, 10240000
+t_c_var_inf[0.3] = 0.983737; nu_bar_var[0.3] = 1/0.70173   #? Excluding 2560000, 5120000, 10240000
+t_c_mcs_inf[0.3] = 0.983689; nu_bar_mcs[0.3] = 1/0.78967   #? Excluding 2560000, 5120000, 10240000
 
 #! G=0.4
-t_c_var_inf[0.4] = 0.964267; nu_bar_var[0.4] = 1/0.72372
-t_c_mcs_inf[0.4] = 0.964183; nu_bar_mcs[0.4] = 1/0.54942   #? Excluding 10240000
+t_c_var_inf[0.4] = 0.964284; nu_bar_var[0.4] = 1/0.65864    #? Excluding 5120000, 10240000
+t_c_mcs_inf[0.4] = 0.964058; nu_bar_mcs[0.4] = 1/0.62966
 
 #! G=0.5
-t_c_var_inf[0.5] = 0.93706; nu_bar_var[0.5] = 1/0.68017
-t_c_mcs_inf[0.5] = 0.93691; nu_bar_mcs[0.5] = 1/0.53067
+t_c_var_inf[0.5] = 0.937061; nu_bar_var[0.5] = 1/0.68135     #? Excluding 10240000
+t_c_mcs_inf[0.5] = 0.936897; nu_bar_mcs[0.5] = 1/0.59502      #? Excluding 10240000
+#------------------------------------
 
 #! G=0.6
 t_c_var_inf[0.6] = 0.901616; nu_bar_var[0.6] = 1/0.69724
@@ -147,7 +148,7 @@ t_c_mcs_inf[0.6] = 0.901384; nu_bar_mcs[0.6] = 1/0.54742
 
 #! G=0.7
 t_c_var_inf[0.7] = 0.856656; nu_bar_var[0.7] = 1/0.71512
-t_c_mcs_inf[0.7] = 0.856363; nu_bar_mcs[0.7] = 1/0.55401   #? excluding 2560000
+t_c_mcs_inf[0.7] = 0.856363; nu_bar_mcs[0.7] = 1/0.55401    #? excluding 2560000
 
 #! G=0.8
 t_c_var_inf[0.8] = 0.798838; nu_bar_var[0.8] = 1/0.66728
@@ -188,20 +189,20 @@ csd_fitRange[5120000, 0.3] = [11, 40]; m_c_csd[5120000, 0.3] = 0.93
 csd_fitRange[10240000, 0.3] = [11, 42]; m_c_csd[10240000, 0.3] = 0.93
 
 #! G=0.4
-csd_fitRange[10000, 0.4] = [11, 21]; m_c_csd[10000, 0.4] = 0.85
-csd_fitRange[20000, 0.4] = [11, 24]; m_c_csd[20000, 0.4] = 0.85
-csd_fitRange[40000, 0.4] = [11, 26]; m_c_csd[40000, 0.4] = 0.85
-csd_fitRange[80000, 0.4] = [11, 28]; m_c_csd[80000, 0.4] = 0.85
-csd_fitRange[160000, 0.4] = [11, 31]; m_c_csd[160000, 0.4] = 0.85
-csd_fitRange[320000, 0.4] = [11, 34]; m_c_csd[320000, 0.4] = 0.85
-csd_fitRange[640000, 0.4] = [11, 37]; m_c_csd[640000, 0.4] = 0.85
-csd_fitRange[1280000, 0.4] = [11, 39]; m_c_csd[1280000, 0.4] = 0.85
-csd_fitRange[2560000, 0.4] = [11, 41]; m_c_csd[2560000, 0.4] = 0.85
-csd_fitRange[5120000, 0.4] = [11, 43]; m_c_csd[5120000, 0.4] = 0.85
-csd_fitRange[10240000, 0.4] = [11, 45]; m_c_csd[10240000, 0.4] = 0.85
+csd_fitRange[10000, 0.4] = [11, 21]; m_c_csd[10000, 0.4] = 0.850
+csd_fitRange[20000, 0.4] = [11, 23]; m_c_csd[20000, 0.4] = 0.865
+csd_fitRange[40000, 0.4] = [11, 25]; m_c_csd[40000, 0.4] = 0.875
+csd_fitRange[80000, 0.4] = [11, 27]; m_c_csd[80000, 0.4] = 0.880
+csd_fitRange[160000, 0.4] = [11, 28]; m_c_csd[160000, 0.4] = 0.880
+csd_fitRange[320000, 0.4] = [11, 30]; m_c_csd[320000, 0.4] = 0.880
+csd_fitRange[640000, 0.4] = [11, 31]; m_c_csd[640000, 0.4] = 0.885
+csd_fitRange[1280000, 0.4] = [11, 32]; m_c_csd[1280000, 0.4] = 0.885
+csd_fitRange[2560000, 0.4] = [11, 33]; m_c_csd[2560000, 0.4] = 0.885
+csd_fitRange[5120000, 0.4] = [11, 34]; m_c_csd[5120000, 0.4] = 0.885
+csd_fitRange[10240000, 0.4] = [11, 35]; m_c_csd[10240000, 0.4] = 0.885
 
 #! G=0.5
-csd_fitRange[10000, 0.5] = [11, 22]; m_c_csd[10000, 0.5] = 0.79
+csd_fitRange[10000, 0.5] = [11, 22]; m_c_csd[10000, 0.5] = 0.780
 csd_fitRange[20000, 0.5] = [11, 24]; m_c_csd[20000, 0.5] = 0.796
 csd_fitRange[40000, 0.5] = [11, 26]; m_c_csd[40000, 0.5] = 0.806
 csd_fitRange[80000, 0.5] = [11, 27]; m_c_csd[80000, 0.5] = 0.815
@@ -267,6 +268,7 @@ csd_fitRange[10240000, 0.9] = [11, 40]; m_c_csd[10240000, 0.9] = 0.380
 
 #*---------------------------------------------------------------------------------------------------
 if __name__=="__main__":
+    # print("This is a module parameters.py")
     import readData
 
     for acceptanceThreshold in acceptanceThresholdList:
@@ -278,6 +280,6 @@ if __name__=="__main__":
                     t_c_csd = index/networkSize
                     break
 
-            with open("../data/mBFW_hybrid/points/" + "N{:.1e},G{:.1f}".format(networkSize, acceptanceThreshold) + ".txt", 'a') as file:
+            with open("../data/mBFW/points/" + "N{:.1e},G{:.1f}".format(networkSize, acceptanceThreshold) + ".txt", 'a') as file:
                 file.write("t_c_csd: " + str(t_c_csd) + "\n")
                 file.write("m_c_csd: " + str(m_c_csd[networkSize, acceptanceThreshold]) + "\n")

@@ -35,7 +35,7 @@ namespace mBFW::parameters{
         else if (t_acceptanceThreshold == 0.4){
             // orderParameter_clusterSizeDist = {0.01, 0.05, 0.1, 0.15, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.905, 0.91, 0.915, 0.92, 0.95};
             // orderParameter_clusterSizeDist = {0.65, 0.66, 0.67, 0.68, 0.69, 0.71, 0.72, 0.73, 0.74, 0.75, 0.76, 0.77, 0.78, 0.79, 0.81, 0.82, 0.83, 0.84, 0.85};
-            orderParameter_clusterSizeDist = {0.845, 0.855, 0.86, 0.865, 0.987, 0.875, 0.88, 0.885, 0.89, 0.895};
+            orderParameter_clusterSizeDist = {0.845, 0.855, 0.86, 0.865, 0.870, 0.875, 0.88, 0.885, 0.89, 0.895};
         }
         else if (t_acceptanceThreshold == 0.5){
             // orderParameter_clusterSizeDist = {0.01, 0.05, 0.1, 0.15, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.81, 0.82, 0.83, 0.84, 0.85, 0.86, 0.87, 0.88, 0.89, 0.9};

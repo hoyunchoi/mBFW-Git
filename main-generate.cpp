@@ -10,7 +10,7 @@ int main(int argc, char *argv[]){
     const double acceptanceThreshold=std::stod(argv[2]);
     const int ensembleSize=std::stoul(argv[3]);
     const int coreNum=std::stoul(argv[4]);
-    constexpr int randomEngineSeed = -1;
+    constexpr int randomEngineSeed = 0;
 
     //* Check input network size and acceptance threshold
     if (mBFW::parameters::networkSizeList.find(networkSize) == mBFW::parameters::networkSizeList.end()){
