@@ -7,7 +7,7 @@
 int main(int argc, char *argv[]){
     const double acceptanceThreshold=std::stod(argv[1]);
     const int networkSize=std::stoul(argv[2]);
-    const bool deletion = true;
+    const bool deletion = false;
     constexpr double logBinDelta = 0.1;
 
     //* Check input network size and acceptance threshold
@@ -39,7 +39,7 @@ int main(int argc, char *argv[]){
     checkList["orderParameterDist"] = false;
     checkList["orderParameterVariance"] = false;
     checkList["upperBound_deltaAcceptance"] = false;
-    checkList["sampled_deltaUpperBound_interEventTime"] = true;
+    checkList["sampled_deltaUpperBound_interEventTime"] = false;
     checkList["sampled_upperBound_interEventTime"] = true;
     checkList["sampled_time_interEventTime"] = true;
 

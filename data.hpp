@@ -309,7 +309,7 @@ namespace mBFW::data{
         const std::set<std::string> additionalFileNameList = findTargetFileNameList(additionalDirectory, baseName);
 
         //* Check the number of files
-        if (baseFileNameList.size() == 0){
+        if (baseFileNameList.empty()){
             std::cout << "WARNING: No file at " << baseDirectory << ", " << baseName << "\n";
             exit(1);
         }
@@ -388,7 +388,7 @@ namespace mBFW::data{
         const std::set<std::string> additionalFileNameList = findTargetFileNameList(additionalDirectory, baseName);
 
         //* Check the number of files
-        if (baseFileNameList.size() == 0){
+        if (baseFileNameList.empty()){
             std::cout << "WARNING: No file at " << baseDirectory << ", " << baseName << "\n";
             exit(1);
         }
@@ -458,7 +458,7 @@ namespace mBFW::data{
             std::set<std::string> additionalFileNameList = findTargetFileNameList(additionalDirectory, baseName);
 
             //* Check the number of files
-            if (baseFileNameList.size() == 0){
+            if (baseFileNameList.empty()){
                 std::cout << "WARNING: No file at " << baseDirectory << ", " << baseName << "\n";
                 exit(1);
             }
@@ -704,7 +704,7 @@ namespace mBFW::data{
             const std::set<std::string> additionalFileNameList = findTargetFileNameList(additionalDirectory, baseName);
 
             //* Check the number of files
-            if (baseFileNameList.size() == 0){
+            if (baseFileNameList.empty()){
                 std::cout << "WARNING: No file at " << baseDirectory << ", " << baseName << "\n";
                 exit(1);
             }
@@ -739,7 +739,7 @@ namespace mBFW::data{
             CSV::write(baseDirectory + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize, 0), average);
 
             //* Log Binning data
-            std::map<double, double> binned = intLogBin(average);
+            const std::map<double, double> binned = intLogBin(average);
 
             //* Write log binned data
             std::cout << "Writing file " << additionalDirectory + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize) << "\n";
@@ -758,6 +758,113 @@ namespace mBFW::data{
         return;
     }
 
+    void seperate(std::string t_type, const std::map<std::pair<int, int>, double>& t_data, const int& t_ensembleSize){
+        //* Seperate two observable names
+        t_type = t_type.substr(std::string("sampled_").size());
+        const std::string observable1 = t_type.substr(0, t_type.find("_"));
+        const std::string observable2 = t_type.substr(t_type.find("_")+1);
+
+        //* Define directories
+        const std::string baseDirectory1 = defineAdditionalDirectory(rootPath, observable1 + "_" + observable2 + "_tot");
+        const std::string baseDirectory2 = defineAdditionalDirectory(rootPath, observable2 + "_" + observable1 + "_tot");
+        const std::string additionalDirectory1 = defineAdditionalDirectory(baseDirectory1, "logBin");
+        const std::string additionalDirectory2 = defineAdditionalDirectory(baseDirectory2, "logBin");
+
+        //* Find target files
+        const std::set<std::string> baseFileNameList1 = findTargetFileNameList(baseDirectory1, baseName);
+        const std::set<std::string> baseFileNameList2 = findTargetFileNameList(baseDirectory2, baseName);
+        const std::set<std::string> additionalFileNameList1 = findTargetFileNameList(additionalDirectory1, baseName);
+        const std::set<std::string> additionalFileNameList2 = findTargetFileNameList(additionalDirectory2, baseName);
+
+        //* Check the number of files
+        if (baseFileNameList1.size() >= 2){
+            std::cout << "WARNING: More than two files at " << baseDirectory1 << ", " << baseName << "\n";
+            exit(1);
+        }
+        else if (additionalFileNameList1.size() >= 2){
+            std::cout << "WARNING: More than two files at " << additionalDirectory1 << ", " << baseName << "\n";
+            exit(1);
+        }
+        else if (baseFileNameList2.size() >= 2){
+            std::cout << "WARNING: More than two files at " << baseDirectory2 << ", " << baseName << "\n";
+            exit(1);
+        }
+        else if (additionalFileNameList2.size() >= 2){
+            std::cout << "WARNING: More than two files at " << additionalDirectory2 << ", " << baseName << "\n";
+            exit(1);
+        }
+
+        //* Read target files if exists
+        std::map<int, double> average1;
+        int totalEnsembleSize1 = t_ensembleSize;
+        if (!baseFileNameList1.empty()){
+            const int ensemble = extractEnsemble(*baseFileNameList1.begin());
+            totalEnsembleSize1 += ensemble;
+            std::map<int, double> temp;
+            CSV::read(*baseFileNameList1.begin(), temp);
+            const double ratio = ensemble / totalEnsembleSize1;
+            average1 = temp * ratio;
+        }
+        std::map<int, double> average2;
+        int totalEnsembleSize2 = t_ensembleSize;
+        if (!baseFileNameList2.empty()){
+            const int ensemble = extractEnsemble(*baseFileNameList2.begin());
+            totalEnsembleSize2 += ensemble;
+            std::map<int, double> temp;
+            CSV::read(*baseFileNameList2.begin(), temp);
+            const double ratio = ensemble / totalEnsembleSize1;
+            average2 = temp * ratio;
+        }
+
+        //* Get total ratio of each observables
+        std::map<int, double> totalRatio1, totalRatio2;
+        for (const auto& e : t_data){
+            totalRatio1[e.first.first] += e.second;
+            totalRatio2[e.first.second] += e.second;
+        }
+
+        //* Add value
+        for (const auto& e : t_data){
+            average1[e.first.first] += e.first.second * e.second/totalRatio1[e.first.first];
+            average2[e.first.second] += e.first.first * e.second/totalRatio2[e.first.second];
+        }
+
+        //* Write averaged data
+        std::cout << "Writing file " << baseDirectory1 + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize1, 0) << "\n";
+        CSV::write(baseDirectory1 + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize1, 0), average1);
+        std::cout << "Writing file " << baseDirectory2 + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize2, 0) << "\n";
+        CSV::write(baseDirectory2 + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize2, 0), average2);
+
+        //* Log binning data
+        const std::map<double, double> binned1 = intLogBin(average1);
+        const std::map<double, double> binned2 = intLogBin(average2);
+
+        //* Write log binned data
+        std::cout << "Writing file " << additionalDirectory1 + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize1) << "\n";
+        CSV::write(additionalDirectory1 + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize1), binned1);
+
+        //* Write log binned data
+        std::cout << "Writing file " << additionalDirectory2 + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize2) << "\n";
+        CSV::write(additionalDirectory2 + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize2), binned2);
+
+        //* Delete previous averaged and log binned data after successfully writing
+        for (const std::string& fileName : baseFileNameList1){
+            conditionallyDeleteFile(baseDirectory1 + fileName);
+        }
+        for (const std::string fileName : additionalFileNameList1){
+            conditionallyDeleteFile(additionalDirectory1 + fileName);
+        }
+        for (const std::string& fileName : baseFileNameList2){
+            conditionallyDeleteFile(baseDirectory2 + fileName);
+        }
+        for (const std::string fileName : additionalFileNameList2){
+            conditionallyDeleteFile(additionalDirectory2 + fileName);
+        }
+
+        //* void return
+        return;
+    }
+
     void sampled_X_interEventTime(const std::string& t_type){
         //* Defind directories
         const std::string baseDirectory = rootPath + t_type + "/";
@@ -768,7 +875,7 @@ namespace mBFW::data{
         const std::set<std::string> additionalFileNameList = findTargetFileNameList(additionalDirectory, baseName);
 
         //* Check the number of files
-        if (baseFileNameList.size() == 0){
+        if (baseFileNameList.empty()){
             std::cout << "WARNING: No file at " << baseDirectory << ", " << baseName << "\n";
             exit(1);
         }
@@ -778,7 +885,7 @@ namespace mBFW::data{
         }
         else if (baseFileNameList.size() == 1){
             std::cout << "Passing file " << additionalDirectory + *additionalFileNameList.begin() << "\n";
-            return;
+            // return;
         }
 
         //* Find ensemble Size of each target files and total ensemble size
@@ -813,6 +920,9 @@ namespace mBFW::data{
         std::cout << "Writing file " << additionalDirectory + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize) << "\n";
         CSV::write(additionalDirectory + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize), binned);
 
+        //* Seperate two variables
+        seperate(t_type, average, totalEnsembleSize);
+
         //* Delete previous averaged and log binned data after successfully writing
         for (const std::string& fileName : baseFileNameList){
             conditionallyDeleteFile(baseDirectory + fileName);
@@ -821,9 +931,11 @@ namespace mBFW::data{
             conditionallyDeleteFile(additionalDirectory + fileName);
         }
 
+
         //* void return
         return;
     }
+
 
     //* ------------------------------------------------------------- Integration of each observables data process -----------------------------------------------------
     //* Run selected observables at check list
