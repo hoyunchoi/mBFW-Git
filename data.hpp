@@ -17,6 +17,8 @@
 #include "fileName.hpp"
 #include "parameters.hpp"
 
+//? Need to seperate log binning
+
 namespace mBFW::data{
     using namespace linearAlgebra;
     namespace fs = std::filesystem;
@@ -193,10 +195,10 @@ namespace mBFW::data{
 
         //* Bind the data
         std::map<double, double> binned;
-        for (auto it=t_raw.begin(); it!=t_raw.end(); ++it){
+        for (const auto& e : t_raw){
             for (unsigned i=0; i<value.size(); ++i){
-                if (it->first < min[i+1]){
-                    binned[value[i]] += it->second / difference[i];
+                if (e.first < min[i+1]){
+                    binned[value[i]] += e.second/difference[i];
                     break;
                 }
             }
@@ -216,10 +218,10 @@ namespace mBFW::data{
 
         //* Bin the data
         std::map<double, double> binned;
-        for (auto it=t_raw.begin(); it!=t_raw.end(); ++it){
-            for (unsigned i=0; i<value.size(); ++i){
-                if (it->first < min[i+1]){
-                    binned[value[i]] += it->second / difference;
+        for (const auto& e : t_raw){
+            for (unsigned i=0; i<value.sie(); ++i){
+                if (e.first < min[i+1]){
+                    binned[value[i]] += e.second/difference;
                     break;
                 }
             }
