@@ -5,10 +5,10 @@
 #include "data.hpp"
 
 int main(int argc, char *argv[]){
-    const double acceptanceThreshold=std::stod(argv[1]);
-    const int networkSize=std::stoul(argv[2]);
-    const bool deletion = false;
-    constexpr double logBinDelta = 0.1;
+    std::ios_base::sync_with_stdio(false); std::cin.tie(NULL); std::cout.tie(NULL);
+    const double acceptanceThreshold = std::stod(argv[1]);
+    const int networkSize = std::stoul(argv[2]);
+    mBFW::data::deletion = false;
 
     //* Check input network size and acceptance threshold
     if (mBFW::parameters::networkSizeList.find(networkSize) == mBFW::parameters::networkSizeList.end()){
@@ -22,37 +22,36 @@ int main(int argc, char *argv[]){
 
     //* Check list of each observables
     std::map<std::string, bool> checkList;
-    checkList["ageDist_op"] = false;
-    checkList["ageDist_time"] = false;
-    checkList["clusterSizeDist"] = false;
-    checkList["deltaUpperBound_deltaAcceptance"] = false;
-    checkList["deltaUpperBoundDist_op"] = false;
-    checkList["deltaUpperBoundDist_time"] = false;
+    checkList["ageDist_op"] = true;
+    checkList["ageDist_time"] = true;
+    checkList["clusterSizeDist"] = true;
+    checkList["deltaUpperBound_deltaAcceptance"] = true;
+    checkList["deltaUpperBoundDist_op"] = true;
+    checkList["deltaUpperBoundDist_time"] = true;
     checkList["deltaUpperBoundDist_tot"] = false;
-    checkList["interEventTime"] = false;
-    checkList["interEventTimeDist_op"] = false;
-    checkList["interEventTimeDist_time"] = false;
+    checkList["interEventTime"] = true;
+    checkList["interEventTimeDist_op"] = true;
+    checkList["interEventTimeDist_time"] = true;
     checkList["interEventTimeDist_tot"] = false;
     checkList["interEventTime_deltaUpperBound"] = false;
-    checkList["meanClusterSize"] = false;
-    checkList["orderParameter"] = false;
-    checkList["orderParameterDist"] = false;
-    checkList["orderParameterVariance"] = false;
-    checkList["upperBound_deltaAcceptance"] = false;
-    checkList["sampled_deltaUpperBound_interEventTime"] = true;
+    checkList["meanClusterSize"] = true;
+    checkList["orderParameter"] = true;
+    checkList["orderParameterDist"] = true;
+    checkList["orderParameterVariance"] = true;
+    checkList["upperBound_deltaAcceptance"] = true;
+    checkList["sampled_deltaUpperBound_interEventTime"] = false;
     checkList["sampled_upperBound_interEventTime"] = false;
     checkList["sampled_time_interEventTime"] = false;
+    checkList["clusterSizeDist_exact"] = true;
+    checkList["clusterSizeDist_time"] = true;
+    checkList["meanClusterSize_trial"] = true;
+    checkList["orderParameter_trial"] = true;
+    checkList["orderParameterVariance_trial"] = true;
 
-    checkList["clusterSizeDist_exact"] = false;
-    checkList["clusterSizeDist_time"] = false;
-    checkList["meanClusterSize_trial"] = false;
-    checkList["orderParameter_trial"] = false;
-    checkList["orderParameterVariance_trial"] = false;
-
-    //* Run data process
+    //* Run
     auto start = std::chrono::system_clock::now();
-    mBFW::data::setParameters(networkSize, acceptanceThreshold, logBinDelta, deletion);
-    mBFW::data::process(checkList);
+    mBFW::data::setParameters(networkSize, acceptanceThreshold);
+    mBFW::data::run(checkList);
     std::chrono::duration<double> sec = std::chrono::system_clock::now()-start;
     printf("%.6f second to process data\n", sec.count());
 

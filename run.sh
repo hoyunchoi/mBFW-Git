@@ -6,4 +6,4 @@ ensembleSize=$3
 machine=$4
 coreNum=$5
 
-spg run ${machine} ./mBFW.sh ${g} ${networkSize} ${ensembleSize} ${coreNum}
+spg run ${machine} ./generate.sh ${g} ${networkSize} ${ensembleSize} ${coreNum}
