@@ -56,7 +56,9 @@ absolutePathList = {}
 for observable, relativePath in relativePathList.items():
     absolutePathList[observable] = baseDirectory + observable + relativePath
 
-#* CSV Reader
+# * CSV Reader
+
+
 def readCSV(t_fileName):
     data = pd.read_csv(t_fileName, sep=',', header=None)
     data = data.values.transpose()
@@ -66,18 +68,20 @@ def readCSV(t_fileName):
         return tuple([row for row in data])
 
 
-#* File Name Convections
+# * File Name Convections
 def NG(t_networkSize, t_acceptanceThreshold):
     return "N{:.1e},G{:.1f}*".format(t_networkSize, t_acceptanceThreshold)
 
+
 def NGT(t_networkSize, t_acceptanceThreshold, t_time):
     return "N{:.1e},G{:.1f}*,T{:.4f}*".format(t_networkSize, t_acceptanceThreshold, t_time)
+
 
 def NGOP(t_networkSize, t_acceptanceThreshold, t_orderParameter):
     return "N{:.1e},G{:.1f}*,OP{:.4f}*".format(t_networkSize, t_acceptanceThreshold, t_orderParameter)
 
 
-#* Get the order parameter/time value in directory
+# * Get the order parameter/time value in directory
 def extractRepeater(t_type, t_networkSize, t_acceptanceThreshold):
     repeaterList = set()
     if (t_type == "clusterSizeDist_time" or t_type == "orderParameterDist"):
@@ -85,17 +89,20 @@ def extractRepeater(t_type, t_networkSize, t_acceptanceThreshold):
     elif (t_type == "clusterSizeDist" or t_type == "clusterSizeDist_exact"):
         target = "OP"
     for file in glob.glob(absolutePathList[t_type] + NG(t_networkSize, t_acceptanceThreshold)):
-        repeaterList.add(float(file[file.find(target)+len(target) : file.find(".txt")]))
+        repeaterList.add(float(file[file.find(target) + len(target): file.find(".txt")]))
     return repeaterList
 
-#* Read various points
+# * Read various points
+
+
 def readPoint(t_type, t_networkSize, t_acceptanceThreshold):
     with open(absolutePathList["points"] + NG(t_networkSize, t_acceptanceThreshold)[:-1] + ".txt") as file:
         point = 0
         for line in file.readlines():
             if t_type in line:
-                point = float(line[line.find(": ")+2 : ])
+                point = float(line[line.find(": ") + 2:])
     return point
+
 
 def readPoints(t_networkSize, t_acceptanceThreshold):
     points = {}
@@ -103,46 +110,49 @@ def readPoints(t_networkSize, t_acceptanceThreshold):
         content = file.readlines()
         for line in content:
             if "t_a" in line:
-                points["t_a"] = float(line[line.find(": ")+2 : ])
+                points["t_a"] = float(line[line.find(": ") + 2:])
             elif "m_a" in line:
-                points["m_a"] = float(line[line.find(": ")+2 : ])
+                points["m_a"] = float(line[line.find(": ") + 2:])
             elif "t_inflection" in line:
-                points["t_inflection"] = float(line[line.find(": ")+2 : ])
+                points["t_inflection"] = float(line[line.find(": ") + 2:])
             elif "m_inflection" in line:
-                points["m_inflection"] = float(line[line.find(": ")+2 : ])
+                points["m_inflection"] = float(line[line.find(": ") + 2:])
             elif "t_c_var" in line:
-                points["t_c_var"] = float(line[line.find(": ")+2 : ])
+                points["t_c_var"] = float(line[line.find(": ") + 2:])
             elif "m_c_var" in line:
-                points["m_c_var"] = float(line[line.find(": ")+2 : ])
+                points["m_c_var"] = float(line[line.find(": ") + 2:])
             elif "t_c_mcs" in line:
-                points["t_c_mcs"] = float(line[line.find(": ")+2 : ])
+                points["t_c_mcs"] = float(line[line.find(": ") + 2:])
             elif "m_c_mcs" in line:
-                points["m_c_mcs"] = float(line[line.find(": ")+2 : ])
+                points["m_c_mcs"] = float(line[line.find(": ") + 2:])
             elif "t_c_csd" in line:
-                points["t_c_csd"] = float(line[line.find(": ")+2 : ])
+                points["t_c_csd"] = float(line[line.find(": ") + 2:])
             elif "m_c_csd" in line:
-                points["m_c_csd"] = float(line[line.find(": ")+2 : ])
+                points["m_c_csd"] = float(line[line.find(": ") + 2:])
     return points
 
-#* Read Observables
+# * Read Observables
+
+
 def read(t_type, t_networkSize, t_acceptanceThreshold, t_reapeater=None):
-    #* Read time-accumulated distributions
+    # * Read time-accumulated distributions
     if (t_type == "clusterSizeDist_time" or t_type == "orderParameterDist"):
         file = glob.glob(absolutePathList[t_type] + NGT(t_networkSize, t_acceptanceThreshold, t_reapeater))
 
-    #* Read orderparameter-accumulated distributions
+    # * Read orderparameter-accumulated distributions
     elif (t_type == "clusterSizeDist" or t_type == "clusterSizeDist_exact"):
         file = glob.glob(absolutePathList[t_type] + NGOP(t_networkSize, t_acceptanceThreshold, t_reapeater))
 
-    #* Read general data
+    # * Read general data
     else:
         file = glob.glob(absolutePathList[t_type] + NG(t_networkSize, t_acceptanceThreshold))
 
-    #* Check found files
+    # * Check found files
     if (len(file) != 1):
         print("There is problem at reading " + t_type + " at N={:.1e}".format(t_networkSize) + ", G={:.1f}".format(t_acceptanceThreshold))
         return
     return readCSV(file[0])
 
-if __name__=="__main__":
+
+if __name__ == "__main__":
     print("This is a module readData.py")

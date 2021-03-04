@@ -1,21 +1,23 @@
-#include <iostream>
 #include <chrono>
+#include <iostream>
 
-#include "parameters.hpp"
 #include "data.hpp"
+#include "parameters.hpp"
 
-int main(int argc, char *argv[]){
-    std::ios_base::sync_with_stdio(false); std::cin.tie(NULL); std::cout.tie(NULL);
+int main(int argc, char* argv[]) {
+    std::ios_base::sync_with_stdio(false);
+    std::cin.tie(NULL);
+    std::cout.tie(NULL);
     const double acceptanceThreshold = std::stod(argv[1]);
     const int networkSize = std::stoul(argv[2]);
     mBFW::data::deletion = false;
 
     //* Check input network size and acceptance threshold
-    if (mBFW::parameters::networkSizeList.find(networkSize) == mBFW::parameters::networkSizeList.end()){
+    if (mBFW::parameters::networkSizeList.find(networkSize) == mBFW::parameters::networkSizeList.end()) {
         std::cout << "WARNING: network size is not valid\n";
         return -1;
     }
-    if (mBFW::parameters::acceptanceThresholdList.find(acceptanceThreshold) == mBFW::parameters::acceptanceThresholdList.end()){
+    if (mBFW::parameters::acceptanceThresholdList.find(acceptanceThreshold) == mBFW::parameters::acceptanceThresholdList.end()) {
         std::cout << "WARNING: acceptance threshold is not valid\n";
         return -1;
     }
@@ -52,9 +54,8 @@ int main(int argc, char *argv[]){
     auto start = std::chrono::system_clock::now();
     mBFW::data::setParameters(networkSize, acceptanceThreshold);
     mBFW::data::run(checkList);
-    std::chrono::duration<double> sec = std::chrono::system_clock::now()-start;
+    std::chrono::duration<double> sec = std::chrono::system_clock::now() - start;
     printf("%.6f second to process data\n", sec.count());
 
     return 0;
-
 }
