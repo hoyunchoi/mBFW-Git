@@ -46,9 +46,12 @@ relativePathList["upperBound_interEventTime_tot"] = "/"
 relativePathList["sampled_time_interEventTime"] = "/logBin/"
 relativePathList["time_interEventTime_tot"] = "/"
 relativePathList["interEventTime_time_tot"] = "/"
+relativePathList["noRestriction"] = "/average/";
+
 
 relativePathList["points"] = "/"
 relativePathList["dynamics"] = "/"
+relativePathList["periodDynamics"] = "/"
 
 
 baseDirectory = "../data/mBFW/"

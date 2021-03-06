@@ -24,10 +24,10 @@ const std::string baseDirectory = "../data/mBFW/";
 //* Declaration of variables used at mBFW::generate namespace
 int networkSize;
 double acceptanceThreshold;
-int ensembleSize;
+unsigned ensembleSize;
 int coreNum;
 int randomEngineSeed;
-double precision;
+constexpr double precision = 1e4;
 int maxTime;
 int maxTrialTime;
 const std::vector<std::string> states = {"before", "during", "after"};
@@ -96,34 +96,36 @@ std::uniform_int_distribution<int> nodeDistribution;
 // std::map<std::string, std::vector<int>> sampled_interEventTime_deltaUpperBound;
 
 //! Sampled_X_interEventTime
-std::map<std::pair<int, int>, int> sampled_deltaUpperBound_interEventTime;
-std::map<std::pair<int, int>, int> sampled_upperBound_interEventTime;
-std::map<std::pair<int, int>, int> sampled_time_interEventTime;
+// std::map<std::pair<int, int>, int> sampled_deltaUpperBound_interEventTime;
+// std::map<std::pair<int, int>, int> sampled_upperBound_interEventTime;
+// std::map<std::pair<int, int>, int> sampled_time_interEventTime;
+
+//! noRestriction
+std::vector<unsigned> noRestriction;
 
 //! Dynacmis of network
 // std::vector<std::vector<long long>> dynamics;
+// std::vector<std::vector<long long>> periodDynamics;
 
-//*-------------------------------------------Set Parameters for one run------------------------------------------------------
+//* Set parameters for single run
+void setParameters();
 
-void setParameters(const int& t_networkSize, const int& t_ensembleSize, const double& t_acceptanceThreshold, const int& t_coreNum, const int& t_randomEngineSeed) {
-    //! Input variables
-    networkSize = t_networkSize;
-    ensembleSize = t_ensembleSize;
-    coreNum = t_coreNum;
-    acceptanceThreshold = t_acceptanceThreshold;
-    randomEngineSeed = t_randomEngineSeed;
+//* Generate mBFW model
+void run();
+
+//* Save the model
+void save();
+}  // namespace mBFW::generate
+
+void mBFW::generate::setParameters(){
     // orderParameter_clusterSizeDist = mBFW::parameters::set_orderParameter_clusterSizeDist(t_networkSize, t_acceptanceThreshold);
     // time_clusterSizeDist = mBFW::parameters::set_time_clusterSizeDist(t_networkSize, t_acceptanceThreshold);
     // time_orderParameterDist = mBFW::parameters::set_time_orderParameterDist(t_networkSize, t_acceptanceThreshold);
-    std::tie(t_a, m_a, t_c, m_c) = mBFW::parameters::set_points(t_networkSize, t_acceptanceThreshold);
-    t_a *= t_networkSize;
-    t_c *= t_networkSize;
-    precision = 1e4;
-    if (t_networkSize < precision) {
-        precision = t_networkSize;
-    }
-    maxTime = t_networkSize;
-    maxTrialTime = std::floor(maxTime / t_acceptanceThreshold);
+    std::tie(t_a, m_a, t_c, m_c) = mBFW::parameters::set_points(networkSize, acceptanceThreshold);
+    t_a *= networkSize;
+    t_c *= networkSize;
+    maxTime = networkSize;
+    maxTrialTime = std::floor(maxTime / acceptanceThreshold);
 
     //! Initialize Random Engine
     randomEngineSeed == -1 ? randomEngine.seed((std::random_device())()) : randomEngine.seed(randomEngineSeed);
@@ -140,6 +142,7 @@ void setParameters(const int& t_networkSize, const int& t_ensembleSize, const do
     // sampled_interEventTime.assign(maxTime, 0);
     // interEventTimeDist_tot.assign(maxTime, 0);
     // deltaUpperBoundDist_tot.assign(maxTime, 0);
+    noRestriction.assign(maxTime, 0);
     // for (const double& op : orderParameter_clusterSizeDist){
     //     clusterSizeDist[op].assign(t_networkSize, 0);
     // clusterSizeDist_exact[op].assign(t_networkSize, 0);
@@ -165,11 +168,11 @@ void setParameters(const int& t_networkSize, const int& t_ensembleSize, const do
     // sampled_interEventTime_deltaUpperBound[state].assign(t_networkSize, 0);
     // }
     // dynamics.reserve(maxTrialTime);
-}  //* End of function mBFW::generate::setParameters
+    // periodDynamics.reserve(maxTrialTime);
+}//* End of function mBFW::generate::setParameters
 
-//*-------------------------------------------Run mBFW model ------------------------------------------------------
-void run() {
-    for (int ensemble = 0; ensemble < ensembleSize; ++ensemble) {
+void mBFW::generate::run() {
+    for (unsigned ensemble = 0; ensemble < ensembleSize; ++ensemble) {
         //* Default values for one ensemble
         NZ_Network model(networkSize);
         int root1, root2;
@@ -178,6 +181,8 @@ void run() {
         int size1, size2;
         int time = 0;
         int trialTime = 0;
+        int periodTime = 0;
+        int periodTrialTime = 0;
         int upperBound = 2;
         int eventTime = 0;
         double maxDeltaAcceptance = 0.0;
@@ -212,6 +217,8 @@ void run() {
                 model.merge(root1, root2);
                 ++time;
                 ++trialTime;
+                ++periodTime;
+                ++periodTrialTime;
                 choosingNewNode = true;
                 const int currentMaximumClusterSize = model.getMaximumClusterSize();
                 const double currentOrderParameter = (double)currentMaximumClusterSize / networkSize;
@@ -227,9 +234,11 @@ void run() {
 
                 //* Update max delta acceptance
                 maxDeltaAcceptance = std::max((double)time / trialTime - acceptanceThreshold, maxDeltaAcceptance);
+
                 //! Dynamics
                 {
-                    // dynamics.emplace_back(std::vector<long long> {trialTime, time, currentMaximumClusterSize, upperBound});
+                    // dynamics.emplace_back(std::vector<long long> {trialTime, time, upperBound});
+                    // periodDynamics.emplace_back(std::vector<long long> {periodTrialTime, periodTime, upperBound});
                 }
 
                 //! Order Parameter
@@ -353,9 +362,9 @@ void run() {
 
                     //! Sampled_X_interEventTime
                     {
-                        ++sampled_deltaUpperBound_interEventTime[std::make_pair(deltaMaximumClusterSize, time - eventTime)];
-                        ++sampled_upperBound_interEventTime[std::make_pair(upperBound, time - eventTime)];
-                        ++sampled_time_interEventTime[std::make_pair(time, time - eventTime)];
+                        // ++sampled_deltaUpperBound_interEventTime[std::make_pair(deltaMaximumClusterSize, time - eventTime)];
+                        // ++sampled_upperBound_interEventTime[std::make_pair(upperBound, time - eventTime)];
+                        // ++sampled_time_interEventTime[std::make_pair(time, time - eventTime)];
                     }
 
                     //* Initialize variable for new period
@@ -368,17 +377,29 @@ void run() {
             else if ((double)time / trialTime <= acceptanceThreshold) {
                 upperBound = size1 + size2;
                 choosingNewNode = false;
+
+                //! noRestriction
+                {
+                    if (periodTrialTime == 2){
+                        ++noRestriction[time];
+                    }
+                }
+
+                periodTime = 0;
+                periodTrialTime = 0;
             }  //* End of Upper Bound change
 
             //* Chosen link rejected
             else {
                 ++trialTime;
+                ++periodTrialTime;
                 choosingNewNode = true;
                 // const double currentOrderParameter = (double)model.getMaximumClusterSize()/networkSize;
 
                 //! Dynamics
                 {
-                    // dynamics.emplace_back(std::vector<long long> {trialTime, time, model.getMaximumClusterSize(), upperBound});
+                    // dynamics.emplace_back(std::vector<long long> {trialTime, time, upperBound});
+                    // periodDynamics.emplace_back(std::vector<long long> {periodTrialTime, periodTime, upperBound});
                 }
 
                 //! Trial Order Parameter
@@ -395,8 +416,8 @@ void run() {
     }      //* End of every ensembles
 }  //* End of function mBFW::generate::run
 
-//*-------------------------------------------Save calculated variables------------------------------------------------------
-void save() {
+
+void mBFW::generate::save() {
     using namespace linearAlgebra;
     namespace fs = std::filesystem;
 
@@ -720,32 +741,47 @@ void save() {
 
     //! Sampled_X_interEventTime
     {
-        const std::string directory_dk = baseDirectory + "sampled_deltaUpperBound_interEventTime/";
-        if (!fs::exists(directory_dk)) {
-            fs::create_directories(directory_dk);
-        }
-        std::map<std::pair<int, int>, double> trimmed_dk(sampled_deltaUpperBound_interEventTime.begin(), sampled_deltaUpperBound_interEventTime.end());
-        const double tot_dk = accumulate(trimmed_dk);
-        trimmed_dk /= tot_dk;
-        CSV::write(directory_dk + fileName::NGE(networkSize, acceptanceThreshold, ensembleSize, coreNum), trimmed_dk);
+        // const std::string directory_dk = baseDirectory + "sampled_deltaUpperBound_interEventTime/";
+        // if (!fs::exists(directory_dk)) {
+        //     fs::create_directories(directory_dk);
+        // }
+        // std::map<std::pair<int, int>, double> trimmed_dk(sampled_deltaUpperBound_interEventTime.begin(), sampled_deltaUpperBound_interEventTime.end());
+        // const double tot_dk = accumulate(trimmed_dk);
+        // trimmed_dk /= tot_dk;
+        // CSV::write(directory_dk + fileName::NGE(networkSize, acceptanceThreshold, ensembleSize, coreNum), trimmed_dk);
 
-        const std::string directory_k = baseDirectory + "sampled_upperBound_interEventTime/";
-        if (!fs::exists(directory_k)) {
-            fs::create_directories(directory_k);
-        }
-        std::map<std::pair<int, int>, double> trimmed_k(sampled_upperBound_interEventTime.begin(), sampled_upperBound_interEventTime.end());
-        const double tot_k = accumulate(trimmed_k);
-        trimmed_k /= tot_k;
-        CSV::write(directory_k + fileName::NGE(networkSize, acceptanceThreshold, ensembleSize, coreNum), trimmed_k);
+        // const std::string directory_k = baseDirectory + "sampled_upperBound_interEventTime/";
+        // if (!fs::exists(directory_k)) {
+        //     fs::create_directories(directory_k);
+        // }
+        // std::map<std::pair<int, int>, double> trimmed_k(sampled_upperBound_interEventTime.begin(), sampled_upperBound_interEventTime.end());
+        // const double tot_k = accumulate(trimmed_k);
+        // trimmed_k /= tot_k;
+        // CSV::write(directory_k + fileName::NGE(networkSize, acceptanceThreshold, ensembleSize, coreNum), trimmed_k);
 
-        const std::string directory_t = baseDirectory + "sampled_time_interEventTime/";
-        if (!fs::exists(directory_t)) {
-            fs::create_directories(directory_t);
+        // const std::string directory_t = baseDirectory + "sampled_time_interEventTime/";
+        // if (!fs::exists(directory_t)) {
+        //     fs::create_directories(directory_t);
+        // }
+        // std::map<std::pair<int, int>, double> trimmed_t(sampled_time_interEventTime.begin(), sampled_time_interEventTime.end());
+        // const double tot_t = accumulate(trimmed_t);
+        // trimmed_t /= tot_t;
+        // CSV::write(directory_t + fileName::NGE(networkSize, acceptanceThreshold, ensembleSize, coreNum), trimmed_t);
+    }
+
+    //! No Restriction
+    {
+        const std::string directory = baseDirectory + "noRestriction/";
+        if (!fs::exists(directory)){
+            fs::create_directories(directory);
         }
-        std::map<std::pair<int, int>, double> trimmed_t(sampled_time_interEventTime.begin(), sampled_time_interEventTime.end());
-        const double tot_t = accumulate(trimmed_t);
-        trimmed_t /= tot_t;
-        CSV::write(directory_t + fileName::NGE(networkSize, acceptanceThreshold, ensembleSize, coreNum), trimmed_t);
+        std::map<int, double> trimmed;
+        for (int t=0; t<maxTime; ++t){
+            if (noRestriction[t]){
+                trimmed[t] = noRestriction[t] / (double)ensembleSize;
+            }
+        }
+        CSV::write(directory + fileName::NGE(networkSize, acceptanceThreshold, ensembleSize, coreNum), trimmed);
     }
 
     //! Dynamics
@@ -755,6 +791,10 @@ void save() {
         //     fs::create_directories(directory);
         // }
         // CSV::write(directory + fileName::base(networkSize, acceptanceThreshold) + "-" + std::to_string(randomEngineSeed) + ".txt", dynamics);
+        // const std::string periodDirectory = baseDirectory + "periodDynamics/";
+        // if (!fs::exists(periodDirectory)){
+        //     fs::create_directories(periodDirectory);
+        // }
+        // CSV::write(periodDirectory + fileName::base(networkSize, acceptanceThreshold) + "-" + std::to_string(randomEngineSeed) + ".txt", periodDynamics);
     }
 }  //* End of function mBFW::generate::save
-}  // namespace mBFW::generate

@@ -18,8 +18,6 @@
 #include "fileName.hpp"
 #include "parameters.hpp"
 
-//? Need to seperate log binning
-
 namespace mBFW::data {
 using namespace linearAlgebra;
 namespace fs = std::filesystem;
@@ -36,54 +34,43 @@ int maxTime, maxTrialTime;
 bool deletion;
 
 //* Set parameters for average
-void setParameters(const int& t_networkSize,
-                   const double& t_acceptanceThreshold);
+void setParameters(const int& t_networkSize, const double& t_acceptanceThreshold);
 
 //* Define additional baseDirectory
-const std::string defineAdditionalDirectory(const std::string& t_baseDirectory,
-                                            const std::string& t_additional);
+const std::string defineAdditionalDirectory(const std::string& t_baseDirectory, const std::string& t_additional);
 
 //* Delete already read files
 void conditionallyDeleteFile(const std::string& t_deletionFile);
 
 //* Find target file at input baseDirectory
-const std::set<std::string> findTargetFileNameList(
-    const std::string& t_directory, const std::string& t_target);
+const std::set<std::string> findTargetFileNameList(const std::string& t_directory, const std::string& t_target);
 
 //* Extract Ensemble Size from file name
 const unsigned extractEnsemble(const std::string& t_fileName);
-const unsigned extractTotalEnsemble(
-    const std::set<std::string>& t_fileNameList);
+const unsigned extractTotalEnsemble(const std::set<std::string>& t_fileNameList);
 
 //* Extract value of repeater of standard (order parameter/time) from file name
-const double extractRepeater(const std::string& t_fileName,
-                             const std::string& t_standard,
-                             const unsigned& t_standardSize = 6);
+const double extractRepeater(const std::string& t_fileName, const std::string& t_standard, const unsigned& t_standardSize = 6);
 
-//* Extract list of repeater of standard(order parameter/time) from file name
-//list
-const std::set<double> extractRepeaterList(
-    const std::set<std::string>& t_fileNameList, const std::string& t_standard);
+//* Extract list of repeater of standard(order parameter/time) from file name list
+const std::set<double> extractRepeaterList(const std::set<std::string>& t_fileNameList, const std::string& t_standard);
 
 //* Enesemble average the input file list
 template <typename T>
-std::tuple<T, unsigned> averageFile(const std::string& t_baseDirectory,
-                                    const std::set<std::string>& t_fileNameList,
-                                    const T& t_dummy);
+std::tuple<T, unsigned> averageFile(const std::string& t_baseDirectory, const std::set<std::string>& t_fileNameList, const T& t_dummy);
 
 //* Find t_a and inflection point of order parameter
 void findTa(const std::vector<double>& t_orderParameter);
+void findTa(const std::map<int, double>& DO_NOT_USE_THIS_FUNCTION){}
 
-//* ----------------------------------------------------- Process for each
-//observables --------------------------------------------------------
-//* Process (Trial)Time-X
-//! Order Parameter (Trial), Mean cluster Size (Trial), Order Parameter Variance
-//! (Trial), Inter Event Time
-void vectorAvg(const std::string& t_type);
+//* Process average
+//! Order Parameter (Trial), Mean cluster Size (Trial), Order Parameter Variance(Trial), Inter Event Time, noRestriction
+template <typename T>
+void avg(const std::string& t_type, const T& t_dummy);
+void avgTrial(const std::string& t_type);
 
 //* Process observable: distribution
-//! Inter Event Time Distribution (time, op), Delta Upper Bound Distribution
-//! (time, op), Age Distribution (time, op)
+//! Inter Event Time Distribution (time, op), Delta Upper Bound Distribution(time, op), Age Distribution (time, op)
 template <typename T>
 void dist(const std::string& t_type, const T& t_dummy);
 
@@ -99,16 +86,13 @@ void X_avgY(const std::string& t_type);
 void sampled_X_Y(const std::string& t_type);
 
 //* From sampled_X_Y, average Y for fixed X, average X for fixed Y
-void seperate(const std::string& t_type,
-              const std::map<std::pair<int, int>, double>& t_data,
-              const int& t_ensembleSize);
+void seperate(const std::string& t_type, const std::map<std::pair<int, int>, double>& t_data, const int& t_ensembleSize);
 
 //* Run selected observables at check list
 void run(const std::map<std::string, bool>& t_checkList);
 }  // namespace mBFW::data
 
-void mBFW::data::setParameters(const int& t_networkSize,
-                               const double& t_acceptanceThreshold) {
+void mBFW::data::setParameters(const int& t_networkSize, const double& t_acceptanceThreshold) {
     networkSize = t_networkSize;
     maxTime = t_networkSize;
     maxTrialTime = std::floor(maxTime / t_acceptanceThreshold);
@@ -155,7 +139,7 @@ void mBFW::data::run(const std::map<std::string, bool>& t_checkList) {
         dist("deltaUpperBoundDist_tot", std::map<int, double>{});
     }
     if (t_checkList.at("interEventTime")) {
-        vectorAvg("interEventTime");
+        avg("interEventTime", std::vector<double>{});
     }
     if (t_checkList.at("interEventTimeDist_op")) {
         for (const std::string& state : states) {
@@ -176,25 +160,25 @@ void mBFW::data::run(const std::map<std::string, bool>& t_checkList) {
         }
     }
     if (t_checkList.at("meanClusterSize")) {
-        vectorAvg("meanClusterSize");
+        avg("meanClusterSize", std::vector<double>{});
     }
     if (t_checkList.at("meanClusterSize_trial")) {
-        vectorAvg("meanClusterSize_trial");
+        avgTrial("meanClusterSize_trial");
     }
     if (t_checkList.at("orderParameter")) {
-        vectorAvg("orderParameter");
+        avg("orderParameter", std::vector<double>{});
     }
     if (t_checkList.at("orderParameter_trial")) {
-        vectorAvg("orderParameter_trial");
+        avgTrial("orderParameter_trial");
     }
     if (t_checkList.at("orderParameterDist")) {
         repeaterDist("orderParameterDist", std::map<double, double>{});
     }
     if (t_checkList.at("orderParameterVariance")) {
-        vectorAvg("orderParameterVariance");
+        avg("orderParameterVariance", std::vector<double>{});
     }
     if (t_checkList.at("orderParameterVariance_trial")) {
-        vectorAvg("orderParameterVariance_trial");
+        avgTrial("orderParameterVariance_trial");
     }
     if (t_checkList.at("upperBound_deltaAcceptance")) {
         for (const std::string& state : states) {
@@ -210,10 +194,12 @@ void mBFW::data::run(const std::map<std::string, bool>& t_checkList) {
     if (t_checkList.at("sampled_time_interEventTime")) {
         sampled_X_Y("sampled_time_interEventTime");
     }
+    if (t_checkList.at("noRestriction")){
+        avg("noRestriction", std::map<int, double>{});
+    }
 }
 
-const std::string mBFW::data::defineAdditionalDirectory(
-    const std::string& t_baseDirectory, const std::string& t_additional) {
+const std::string mBFW::data::defineAdditionalDirectory(const std::string& t_baseDirectory, const std::string& t_additional) {
     const std::string additionalDirectory = t_baseDirectory + t_additional + "/";
     if (!fs::exists(additionalDirectory)) {
         fs::create_directories(additionalDirectory);
@@ -274,7 +260,7 @@ std::tuple<T, unsigned> mBFW::data::averageFile(const std::string& t_baseDirecto
         T temp;
         CSV::read(t_baseDirectory + fileName, temp);
         const double ratio = extractEnsemble(fileName) / (double)totalEnsembleSize;
-        average.empty() ? average = temp* ratio : average += temp * ratio;
+        average.empty() ? average = temp * ratio : average += temp * ratio;
     }
     return std::make_tuple(average, totalEnsembleSize);
 }
@@ -285,9 +271,7 @@ void mBFW::data::findTa(const std::vector<double>& t_orderParameter) {
     smoothedOrderParameter[0] = t_orderParameter[0];
     for (int i = 1; i < maxTime - 1; ++i) {
         smoothedOrderParameter[i] =
-            (t_orderParameter[i] + t_orderParameter[i - 1] +
-             t_orderParameter[i + 1]) /
-            3.0;
+            (t_orderParameter[i] + t_orderParameter[i - 1] + t_orderParameter[i + 1]) / 3.0;
     }
     smoothedOrderParameter[maxTime - 1] = t_orderParameter[maxTime - 1];
 
@@ -302,9 +286,7 @@ void mBFW::data::findTa(const std::vector<double>& t_orderParameter) {
         }
     }
     maxSlope *= networkSize;
-    const std::vector<double> inflectionPoint = {
-        (inflectionIndex + 0.5) / networkSize,
-        (smoothedOrderParameter[inflectionIndex] + smoothedOrderParameter[inflectionIndex + 1]) * 0.5};
+    const std::vector<double> inflectionPoint = {(inflectionIndex + 0.5) / networkSize, (smoothedOrderParameter[inflectionIndex] + smoothedOrderParameter[inflectionIndex + 1]) * 0.5};
 
     //* Calculate t_a and m_a with precision
     const int L_A = (inflectionPoint[0] - inflectionPoint[1] / maxSlope) * networkSize;
@@ -321,7 +303,7 @@ void mBFW::data::findTa(const std::vector<double>& t_orderParameter) {
     writeFile.close();
 }
 
-void mBFW::data::vectorAvg(const std::string& t_type) {
+void mBFW::data::avgTrial(const std::string& t_type) {
     //* Define Directories
     const std::string baseDirectory = defineAdditionalDirectory(rootDirectory, t_type);
     const std::string additionalDirectory = defineAdditionalDirectory(baseDirectory, "average");
@@ -359,6 +341,52 @@ void mBFW::data::vectorAvg(const std::string& t_type) {
     std::cout << "Writing file " << additionalDirectory + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize) << "\n";
     CSV::write(additionalDirectory + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize), average);
 
+    //* Delete previous averaged and trimmed data after successfully writing
+    for (const std::string& fileName : baseFileNameList) {
+        conditionallyDeleteFile(baseDirectory + fileName);
+    }
+    for (const std::string& fileName : additionalFileNameList) {
+        conditionallyDeleteFile(additionalDirectory + fileName);
+    }
+    //* void return
+    return;
+}
+
+template <typename T>
+void mBFW::data::avg(const std::string& t_type, const T& t_dummy) {
+    //* Define Directories
+    const std::string baseDirectory = defineAdditionalDirectory(rootDirectory, t_type);
+    const std::string additionalDirectory = defineAdditionalDirectory(baseDirectory, "average");
+
+    //* Find target files at base directory and average directory according to system size and acceptance threshold
+    const std::set<std::string> baseFileNameList = findTargetFileNameList(baseDirectory, baseName);
+    const std::set<std::string> additionalFileNameList = findTargetFileNameList(additionalDirectory, baseName);
+
+    //* Check the number of files
+    if (baseFileNameList.empty()) {
+        std::cout << "WARNING: No file at " << baseDirectory << ": " << baseName << "\n";
+        exit(1);
+    } else if (additionalFileNameList.size() >= 2) {
+        std::cout << "WARNING: More than two files at " << additionalDirectory << ": " << baseName << "\n";
+        exit(1);
+    } else if (baseFileNameList.size() == 1) {
+        std::cout << "Passing file " << additionalDirectory + *additionalFileNameList.begin() << "\n";
+        return;
+    }
+
+    //* Average raw files
+    auto [average, totalEnsembleSize] = averageFile(baseDirectory, baseFileNameList, t_dummy);
+    std::cout << "Writing file " << baseDirectory + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize, 0) << "\n";
+    CSV::write(baseDirectory + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize, 0), average);
+
+    if (t_type == "meanClusterSize"){
+        linearAlgebra::popBack(average);
+    }
+
+    //* Write trimmed data
+    std::cout << "Writing file " << additionalDirectory + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize) << "\n";
+    CSV::write(additionalDirectory + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize), average);
+
     //* Find t_a for order parameter
     if (t_type == "orderParameter") {
         findTa(average);
@@ -373,6 +401,7 @@ void mBFW::data::vectorAvg(const std::string& t_type) {
     }
     //* void return
     return;
+
 }
 
 template <typename T>
@@ -382,8 +411,7 @@ void mBFW::data::dist(const std::string& t_type, const T& t_dummy) {
     const std::string additionalDirectory = defineAdditionalDirectory(baseDirectory, "logBin");
 
     //* Find target files at base directory and logBin directory corresponding to input system size and acceptance threshold
-    const std::set<std::string> baseFileNameList =
-        indTargetFileNameList(baseDirectory, baseName);
+    const std::set<std::string> baseFileNameList =findTargetFileNameList(baseDirectory, baseName);
     const std::set<std::string> additionalFileNameList = findTargetFileNameList(additionalDirectory, baseName);
 
     //* Check the number of files
@@ -531,8 +559,7 @@ void mBFW::data::X_avgY(const std::string& t_type) {
 
     //* Write log binned data
     std::cout << "Writing file " << additionalDirectory + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize) << "\n";
-    CSV::write(
-        additionalDirectory + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize), binned);
+    CSV::write(additionalDirectory + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize), binned);
 
     //* Delete previous averaged and log binned data after successfully writing
     for (const std::string& fileName : baseFileNameList) {
@@ -548,16 +575,12 @@ void mBFW::data::X_avgY(const std::string& t_type) {
 
 void mBFW::data::sampled_X_Y(const std::string& t_type) {
     //* Defind directories
-    const std::string baseDirectory =
-        defineAdditionalDirectory(rootDirectory, t_type);
-    const std::string additionalDirectory =
-        defineAdditionalDirectory(baseDirectory, "logBin");
+    const std::string baseDirectory = defineAdditionalDirectory(rootDirectory, t_type);
+    const std::string additionalDirectory = defineAdditionalDirectory(baseDirectory, "logBin");
 
     //* Find target files at base directory and logBin directory corresponding to input system size and acceptance threshold
-    const std::set<std::string> baseFileNameList =
-        findTargetFileNameList(baseDirectory, baseName);
-    const std::set<std::string> additionalFileNameList =
-        findTargetFileNameList(additionalDirectory, baseName);
+    const std::set<std::string> baseFileNameList = findTargetFileNameList(baseDirectory, baseName);
+    const std::set<std::string> additionalFileNameList = findTargetFileNameList(additionalDirectory, baseName);
 
     //* Check the number of files
     if (baseFileNameList.empty()) {
@@ -600,9 +623,7 @@ void mBFW::data::sampled_X_Y(const std::string& t_type) {
     return;
 }
 
-void mBFW::data::seperate(const std::string& t_type,
-                          const std::map<std::pair<int, int>, double>& t_data,
-                          const int& t_ensembleSize) {
+void mBFW::data::seperate(const std::string& t_type, const std::map<std::pair<int, int>, double>& t_data, const int& t_ensembleSize) {
     //* Seperate two observable names
     const std::string X_Y = t_type.substr(std::string("sampled_").size());
     const std::string observable1 = X_Y.substr(0, X_Y.find("_"));
