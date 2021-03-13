@@ -5,12 +5,12 @@
 #include "parameters.hpp"
 
 int main(int argc, char* argv[]) {
-    std::ios_base::sync_with_stdio(false);
-    std::cin.tie(NULL);
-    std::cout.tie(NULL);
+    // std::ios_base::sync_with_stdio(false);
+    // std::cin.tie(NULL);
+    // std::cout.tie(NULL);
     const double acceptanceThreshold = std::stod(argv[1]);
     const int networkSize = std::stoul(argv[2]);
-    mBFW::data::deletion = false;
+    mBFW::data::deletion = true;
 
     //* Check input network size and acceptance threshold
     if (mBFW::parameters::networkSizeList.find(networkSize) == mBFW::parameters::networkSizeList.end()) {
@@ -31,6 +31,7 @@ int main(int argc, char* argv[]) {
     checkList["deltaUpperBoundDist_op"] = false;
     checkList["deltaUpperBoundDist_time"] = false;
     checkList["deltaUpperBoundDist_tot"] = false;
+    checkList["dotOrderParameter"] = true;
     checkList["interEventTime"] = false;
     checkList["interEventTimeDist_op"] = false;
     checkList["interEventTimeDist_time"] = false;
@@ -49,7 +50,7 @@ int main(int argc, char* argv[]) {
     checkList["meanClusterSize_trial"] = false;
     checkList["orderParameter_trial"] = false;
     checkList["orderParameterVariance_trial"] = false;
-    checkList["noRestriction"] = true;
+    checkList["noRestriction"] = false;
 
     //* Run
     auto start = std::chrono::system_clock::now();

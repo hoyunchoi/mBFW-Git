@@ -18,6 +18,8 @@
 #include "fileName.hpp"
 #include "parameters.hpp"
 
+//? X_avgY is wrong
+
 namespace mBFW::data {
 using namespace linearAlgebra;
 namespace fs = std::filesystem;
@@ -82,6 +84,8 @@ void repeaterDist(const std::string& t_type, const T& t_dummy);
 //* Process observable: average Y for fixed X
 void X_avgY(const std::string& t_type);
 
+void avgIET(const std::string& t_type);
+
 //* Process observable: Distribution of X,Y
 void sampled_X_Y(const std::string& t_type);
 
@@ -138,8 +142,11 @@ void mBFW::data::run(const std::map<std::string, bool>& t_checkList) {
     if (t_checkList.at("deltaUpperBoundDist_tot")) {
         dist("deltaUpperBoundDist_tot", std::map<int, double>{});
     }
+    if (t_checkList.at("dotOrderParameter")){
+        avgIET("dotOrderParameter");
+    }
     if (t_checkList.at("interEventTime")) {
-        avg("interEventTime", std::vector<double>{});
+        avgIET("interEventTime");
     }
     if (t_checkList.at("interEventTimeDist_op")) {
         for (const std::string& state : states) {
@@ -348,6 +355,7 @@ void mBFW::data::avgTrial(const std::string& t_type) {
     for (const std::string& fileName : additionalFileNameList) {
         conditionallyDeleteFile(additionalDirectory + fileName);
     }
+
     //* void return
     return;
 }
@@ -528,6 +536,66 @@ void mBFW::data::repeaterDist(const std::string& t_type, const T& t_dummy) {
     return;
 }
 
+void mBFW::data::avgIET(const std::string& t_type){
+    //* Define directories
+    const std::string baseDirectory = defineAdditionalDirectory(rootDirectory, t_type);
+    const std::string additionalDirectory = defineAdditionalDirectory(baseDirectory, "average");
+
+    //* Find target files at base directory and average directory according to system size and acceptance threshold
+    const std::set<std::string> baseFileNameList = findTargetFileNameList(baseDirectory, baseName);
+    const std::set<std::string> additionalFileNameList = findTargetFileNameList(additionalDirectory, baseName);
+
+    //* Check the number of files
+    if (baseFileNameList.empty()) {
+        std::cout << "WARNING: No file at " << baseDirectory << ": " << baseName << "\n";
+        exit(1);
+    } else if (additionalFileNameList.size() >= 2) {
+        std::cout << "WARNING: More than two files at " << additionalDirectory << ": " << baseName << "\n";
+        exit(1);
+    } else if (baseFileNameList.size() == 1) {
+        std::cout << "Passing file " << additionalDirectory + *additionalFileNameList.begin() << "\n";
+        return;
+    }
+
+    //* Average raw files
+    std::map<int, unsigned> eachEnsemble;
+    std::map<int, double> average;
+    unsigned totalEnsembleSize = 0;
+    for (const std::string& fileName : baseFileNameList){
+        const unsigned currentEnsemble = extractEnsemble(fileName);
+        totalEnsembleSize += currentEnsemble;
+        std::map<int, double> temp;
+        CSV::read(baseDirectory + fileName, temp);
+        for (const auto& e : temp){
+            eachEnsemble[e.first] += currentEnsemble;
+        }
+    }
+    for (const std::string& fileName : baseFileNameList){
+        const unsigned currentEnsemble = extractEnsemble(fileName);
+        std::map<int, double> temp;
+        CSV::read(baseDirectory + fileName, temp);
+        for (const auto& e : temp){
+            average[e.first] += e.second * (double)currentEnsemble / eachEnsemble.at(e.first);
+        }
+    }
+
+    std::cout << "Writing file " << baseDirectory + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize, 0) << "\n";
+    CSV::write(baseDirectory + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize, 0), average);
+    std::cout << "Writing file " << additionalDirectory + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize) << "\n";
+    CSV::write(additionalDirectory + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize), average);
+
+    //* Delete previous averaged and log binned data after successfully writing
+    for (const std::string& fileName : baseFileNameList) {
+        conditionallyDeleteFile(baseDirectory + fileName);
+    }
+    for (const std::string& fileName : additionalFileNameList) {
+        conditionallyDeleteFile(additionalDirectory + fileName);
+    }
+
+    //* void return
+    return;
+}
+
 void mBFW::data::X_avgY(const std::string& t_type) {
     //* Define directories
     const std::string baseDirectory = defineAdditionalDirectory(rootDirectory, t_type);
@@ -595,8 +663,7 @@ void mBFW::data::sampled_X_Y(const std::string& t_type) {
     }
 
     //* Average raw files and write
-    auto [average, totalEnsembleSize] = averageFile(baseDirectory, baseFileNameList,
-                                                    std::map<std::pair<int, int>, double>{});
+    auto [average, totalEnsembleSize] = averageFile(baseDirectory, baseFileNameList, std::map<std::pair<int, int>, double>{});
     average /= linearAlgebra::accumulate(average);
     std::cout << "Writing file " << baseDirectory + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize, 0) << "\n";
     CSV::write(baseDirectory + fileName::NGE(networkSize, acceptanceThreshold, totalEnsembleSize, 0), average);

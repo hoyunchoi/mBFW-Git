@@ -41,6 +41,8 @@ std::uniform_int_distribution<int> nodeDistribution;
 //! orderParameter[time]: Average value of order parameter at specific time
 // std::vector<double> orderParameter;
 // std::vector<double> orderParameter_trial;
+std::vector<double> dotOrderParameter;
+std::vector<unsigned> sampled_dotOrderParameter;
 
 //! secondMoment[time]: Average value of second moment at specific time
 // std::vector<double> secondMoment;
@@ -51,8 +53,8 @@ std::uniform_int_distribution<int> nodeDistribution;
 // std::vector<double> meanClusterSize_trial;
 
 //! interEventTime[time]: Average value of inter event time at specific time
-// std::vector<double> interEventTime;
-// std::vector<int> sampled_interEventTime;
+// std::vector<unsigned> interEventTime;
+// std::vector<unsigned> sampled_interEventTime;
 
 //! clusterSizeDist[op]: Average distribution of cluster size when order parameter passes op
 //! clusterSizeDist_exact[op]: Average distribution of cluster size when order parameter is exactly op
@@ -101,7 +103,7 @@ std::uniform_int_distribution<int> nodeDistribution;
 // std::map<std::pair<int, int>, int> sampled_time_interEventTime;
 
 //! noRestriction
-std::vector<unsigned> noRestriction;
+// std::vector<unsigned> noRestriction;
 
 //! Dynacmis of network
 // std::vector<std::vector<long long>> dynamics;
@@ -138,11 +140,13 @@ void mBFW::generate::setParameters(){
     // orderParameter_trial.assign(maxTrialTime, 0.0);
     // secondMoment_trial.assign(maxTrialTime, 0.0);
     // meanClusterSize_trial.assign(maxTrialTime, 0.0);
-    // interEventTime.assign(maxTime, 0.0);
+    dotOrderParameter.assign(maxTime, 0.0);
+    sampled_dotOrderParameter.assign(maxTime, 0);
+    // interEventTime.assign(maxTime, 0);
     // sampled_interEventTime.assign(maxTime, 0);
     // interEventTimeDist_tot.assign(maxTime, 0);
     // deltaUpperBoundDist_tot.assign(maxTime, 0);
-    noRestriction.assign(maxTime, 0);
+    // noRestriction.assign(maxTime, 0);
     // for (const double& op : orderParameter_clusterSizeDist){
     //     clusterSizeDist[op].assign(t_networkSize, 0);
     // clusterSizeDist_exact[op].assign(t_networkSize, 0);
@@ -290,6 +294,7 @@ void mBFW::generate::run() {
                 //* Order Parameter of network is changed <=> upper bound is changed
                 if (model.getDeltaMaximumClusterSize() && currentMaximumClusterSize > 2) {
                     const int deltaMaximumClusterSize = model.getDeltaMaximumClusterSize();
+                    const int iet = time - eventTime;
                     //* Check the state distinguished by order parameter
                     if (currentOrderParameter < m_a) {
                         currentState_op = "before";
@@ -325,24 +330,30 @@ void mBFW::generate::run() {
                         // }
                     }
 
+                    //! Dot Order Parameter
+                    {
+                        dotOrderParameter[currentMaximumClusterSize] += (double)deltaMaximumClusterSize/iet;
+                        ++sampled_dotOrderParameter[currentMaximumClusterSize];
+                    }
+
                     //! Inter Event Time
                     {
-                        // interEventTime[time] += (double)time-eventTime;
+                        // interEventTime[time] += iet;
                         // ++sampled_interEventTime[time];
                     }
 
                     //! Inter Event Time Distribution time(op)
                     {
-                        // ++interEventTimeDist_time[currentState_time][time-eventTime];
-                        // ++interEventTimeDist_op[currentState_op][time-eventTime];
-                        // ++interEventTimeDist_tot[time-eventTime];
+                        // ++interEventTimeDist_time[currentState_time][iet];
+                        // ++interEventTimeDist_op[currentState_op][iet];
+                        // ++interEventTimeDist_tot[iet];
 
                     }
 
                     //! Inter Event Time vs Delta Upper Bound
                     {
                         // interEventTime_deltaUpperBound[currentState_op][time - eventTime] += deltaMaximumClusterSize;
-                        // ++sampled_interEventTime_deltaUpperBound[currentState_op][time-eventTime];
+                        // ++sampled_interEventTime_deltaUpperBound[currentState_op][iet];
                     }
 
                     //! Delta Upper Bound Distribution time(op)
@@ -380,9 +391,9 @@ void mBFW::generate::run() {
 
                 //! noRestriction
                 {
-                    if (periodTrialTime == 2){
-                        ++noRestriction[time];
-                    }
+                    // if (periodTrialTime <= 0.2 * networkSize){
+                    //     ++noRestriction[time];
+                    // }
                 }
 
                 periodTime = 0;
@@ -491,6 +502,21 @@ void mBFW::generate::save() {
         // CSV::write(directory + fileName::NGE(networkSize, acceptanceThreshold, ensembleSize, coreNum), meanClusterSize_trial);
     }
 
+    //! Dot Order Parameter
+    {
+        const std::string directory = baseDirectory + "dotOrderParameter/";
+        if (!fs::exists(directory)){
+            fs::create_directories(directory);
+        }
+        std::map<int, double> trimmed;
+        for (int op=0; op<networkSize; ++op){
+            if (sampled_dotOrderParameter[op]){
+                trimmed[op] = dotOrderParameter[op] / sampled_dotOrderParameter[op];
+            }
+        }
+        CSV::write(directory + fileName::NGE(networkSize, acceptanceThreshold, ensembleSize, coreNum), trimmed);
+    }
+
     //! Order Parameter Distribution
     {
         // const std::string directory = baseDirectory + "orderParameterDist/";
@@ -568,12 +594,14 @@ void mBFW::generate::save() {
         // if (!fs::exists(directory)){
         //     fs::create_directories(directory);
         // }
+        // std::map<int, double> trimmed;
         // for (int t=0; t<maxTime; ++t){
         //     if (sampled_interEventTime[t]){
-        //         interEventTime[t] /= (double)sampled_interEventTime[t];
+        //         trimmed[t] = interEventTime[t] / (double)sampled_interEventTime[t];
+        //         // interEventTime[t] /= (double)sampled_interEventTime[t];
         //     }
         // }
-        // CSV::write(directory + fileName::NGE(networkSize, acceptanceThreshold, ensembleSize, coreNum), interEventTime);
+        // CSV::write(directory + fileName::NGE(networkSize, acceptanceThreshold, ensembleSize, coreNum), trimmed);
     }
 
     //! Inter Event Time Distribution time(op)
@@ -771,17 +799,17 @@ void mBFW::generate::save() {
 
     //! No Restriction
     {
-        const std::string directory = baseDirectory + "noRestriction/";
-        if (!fs::exists(directory)){
-            fs::create_directories(directory);
-        }
-        std::map<int, double> trimmed;
-        for (int t=0; t<maxTime; ++t){
-            if (noRestriction[t]){
-                trimmed[t] = noRestriction[t] / (double)ensembleSize;
-            }
-        }
-        CSV::write(directory + fileName::NGE(networkSize, acceptanceThreshold, ensembleSize, coreNum), trimmed);
+        // const std::string directory = baseDirectory + "noRestriction/";
+        // if (!fs::exists(directory)){
+        //     fs::create_directories(directory);
+        // }
+        // std::map<int, double> trimmed;
+        // for (int t=0; t<maxTime; ++t){
+        //     if (noRestriction[t]){
+        //         trimmed[t] = noRestriction[t] / (double)ensembleSize;
+        //     }
+        // }
+        // CSV::write(directory + fileName::NGE(networkSize, acceptanceThreshold, ensembleSize, coreNum), trimmed);
     }
 
     //! Dynamics
