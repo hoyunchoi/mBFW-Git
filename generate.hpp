@@ -41,7 +41,7 @@ std::uniform_int_distribution<int> nodeDistribution;
 //! orderParameter[time]: Average value of order parameter at specific time
 // std::vector<double> orderParameter;
 // std::vector<double> orderParameter_trial;
-std::vector<double> dotOrderParameter;
+std::vector<unsigned> dotOrderParameter;
 std::vector<unsigned> sampled_dotOrderParameter;
 
 //! secondMoment[time]: Average value of second moment at specific time
@@ -103,7 +103,8 @@ std::vector<unsigned> sampled_dotOrderParameter;
 // std::map<std::pair<int, int>, int> sampled_time_interEventTime;
 
 //! noRestriction
-// std::vector<unsigned> noRestriction;
+std::vector<unsigned> noRestriction;
+std::vector<unsigned> sampled_noRestriction;
 
 //! Dynacmis of network
 // std::vector<std::vector<long long>> dynamics;
@@ -140,7 +141,7 @@ void mBFW::generate::setParameters(){
     // orderParameter_trial.assign(maxTrialTime, 0.0);
     // secondMoment_trial.assign(maxTrialTime, 0.0);
     // meanClusterSize_trial.assign(maxTrialTime, 0.0);
-    dotOrderParameter.assign(maxTime, 0.0);
+    dotOrderParameter.assign(maxTime, 0);
     sampled_dotOrderParameter.assign(maxTime, 0);
     // interEventTime.assign(maxTime, 0);
     // sampled_interEventTime.assign(maxTime, 0);
@@ -332,7 +333,7 @@ void mBFW::generate::run() {
 
                     //! Dot Order Parameter
                     {
-                        dotOrderParameter[currentMaximumClusterSize] += (double)deltaMaximumClusterSize/iet;
+                        dotOrderParameter[currentMaximumClusterSize] += deltaMaximumClusterSize;
                         ++sampled_dotOrderParameter[currentMaximumClusterSize];
                     }
 
@@ -391,9 +392,10 @@ void mBFW::generate::run() {
 
                 //! noRestriction
                 {
-                    // if (periodTrialTime <= 0.2 * networkSize){
-                    //     ++noRestriction[time];
-                    // }
+                    ++sampled_noRestriction[time];
+                    if (periodTrialTime <= 0.2 * networkSize){
+                        ++noRestriction[time];
+                    }
                 }
 
                 periodTime = 0;
@@ -511,7 +513,7 @@ void mBFW::generate::save() {
         std::map<int, double> trimmed;
         for (int op=0; op<networkSize; ++op){
             if (sampled_dotOrderParameter[op]){
-                trimmed[op] = dotOrderParameter[op] / sampled_dotOrderParameter[op];
+                trimmed[op] = (double)dotOrderParameter[op] / sampled_dotOrderParameter[op];
             }
         }
         CSV::write(directory + fileName::NGE(networkSize, acceptanceThreshold, ensembleSize, coreNum), trimmed);
@@ -799,17 +801,17 @@ void mBFW::generate::save() {
 
     //! No Restriction
     {
-        // const std::string directory = baseDirectory + "noRestriction/";
-        // if (!fs::exists(directory)){
-        //     fs::create_directories(directory);
-        // }
-        // std::map<int, double> trimmed;
-        // for (int t=0; t<maxTime; ++t){
-        //     if (noRestriction[t]){
-        //         trimmed[t] = noRestriction[t] / (double)ensembleSize;
-        //     }
-        // }
-        // CSV::write(directory + fileName::NGE(networkSize, acceptanceThreshold, ensembleSize, coreNum), trimmed);
+        const std::string directory = baseDirectory + "noRestriction/";
+        if (!fs::exists(directory)){
+            fs::create_directories(directory);
+        }
+        std::map<int, double> trimmed;
+        for (int t=0; t<maxTime; ++t){
+            if (sampled_noRestriction[t]){
+                trimmed[t] = noRestriction[t] / (double)sampled_noRestriction[t];
+            }
+        }
+        CSV::write(directory + fileName::NGE(networkSize, acceptanceThreshold, ensembleSize, coreNum), trimmed);
     }
 
     //! Dynamics

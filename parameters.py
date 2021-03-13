@@ -1,3 +1,6 @@
+from readData import read
+import numpy as np
+
 networkSizeList = [1e4, 2e4, 4e4, 8e4, 1.6e5, 3.2e5, 6.4e5, 1.28e6, 2.56e6, 5.12e6, 1.024e7]
 acceptanceThresholdList = [0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
 
@@ -372,6 +375,23 @@ csd_fitRange[5120000, 0.9] = [11, 38]
 m_c_csd[5120000, 0.9] = 0.380
 csd_fitRange[10240000, 0.9] = [11, 40]
 m_c_csd[10240000, 0.9] = 0.380
+
+
+def findTa(networkSize, acceptanceThreshold):
+    op = read("orderParameter", networkSize, acceptanceThreshold)
+    slope = op[1:] - op[:-1]
+    maxIndex = np.argmax(slope)
+    inflection_t = maxIndex / networkSize
+    inflection_m = op[maxIndex]
+    maxSlope = slope[maxIndex] * networkSize
+    t_a = inflection_t - maxSlope/inflection_m
+    m_a = op[int(t_a*networkSize)]
+    with open("../data/mBFW/points/" + "N{:.1e},G{:.1f}".format(networkSize, acceptanceThreshold) + ".txt", 'a') as file:
+        file.write("t_a: {:.15f}".format(t_a))
+        file.write("m_a: {:.15f}".format(m_a))
+        file.write("t_inflection: {:.15f}".format(inflection_t))
+        file.write("m_inflection: {:.15f}".format(inflection_m))
+
 
 # *---------------------------------------------------------------------------------------------------
 if __name__ == "__main__":
